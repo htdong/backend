@@ -1,0 +1,8 @@
+{
+    "urlMongo": "mongodb://localhost:27017/",
+    "urlSessionDb": "mongodb://localhost:27017/gkSession",
+    "urlSystemDb": "mongodb://localhost:27017/gksbs",
+    "urlConnection": "mongodb://localhost:27017/mean",    
+    "apiUrl": "http://localhost:4000",
+    "secret": "REPLACE THIS WITH YOUR OWN SECRET, IT CAN BE ANY STRING"
+}
