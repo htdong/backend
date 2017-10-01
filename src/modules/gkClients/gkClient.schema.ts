@@ -4,13 +4,27 @@ var Schema = mongoose.Schema;
 
 // Schema
 var GkClientSchema = new Schema ({
-  initial: { type: String, required: true, unique: true },
-  name: { type: String, required: true },
+  name: {
+    type: String,
+    required: true,
+    minlength: 5
+  },
   addresses: [],
   contacts: [],
-  clientDb: { type: String, required: true },
+  clientDb: {
+    type: String,
+    required: true,
+    unique: true
+  },
   remarks: [],
-  status: { type: String },
+  solutions: [
+    {
+      type: String,
+      ref: 'solutions'
+    }
+  ],
+  status1: { type: String },
+  status2: { type: String },
   created_at: Date,
   updated_at: Date,
 }, { collection: 'clients' });

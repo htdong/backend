@@ -23,6 +23,8 @@ class MiddlewaresBase {
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
 
+    // Temporarily block for POSTMAN test
+    /*
     app.use(expressJwt({ secret: ConstantsBase.secret })
       .unless({ path: [
         '/',
@@ -31,7 +33,7 @@ class MiddlewaresBase {
         '/users/forgot']
       })
     );
-
+    */
     app.use((req, res, next) => {
       let urls = req.path.split("/");
       console.log('--------------------------------');
