@@ -31,43 +31,48 @@ var UsersController = {
     var systemDbUri = ConstantsBase.urlSystemDb;
     var gkClient;
     var clientUser;
+    var data;
+
+    var sessionController = require('../session/session.controller');
 
     Promise.resolve()
       .then(()=>{
+        console.log('[01] Validate token');
         if (!mongoose.Types.ObjectId.isValid(req.body.token)) throw new Error('Invalid Token');
         return Promise.resolve();
       })
+
       .then(() => {
-        console.log('[01] Validate token');
+        console.log('[02] Establish systemDb connection');
         return mongoose.createConnection(systemDbUri, { useMongoClient: true });
       })
 
       .then((systemDb) => {
-        console.log('[02] Connect systemDb');
+        console.log('[03] Check if GK Client exist');
         var GkClient = systemDb.model('GkClient', GkClientSchema);
         return GkClient.findById(req.body.token);
       })
 
       .then((client) => {
         if (!client) throw new Error('Client does not exist!');
-
-        console.log('[03] Get GkClient');
+        console.log('[04] Establish masterDb connection');
         gkClient = client;
         var masterDbUri = 'mongodb://localhost:27017/' + gkClient['clientDb'] + '_0000';
         return mongoose.createConnection(masterDbUri, { useMongoClient: true });
+
       })
 
       .then((masterDb) => {
-        console.log('[04] Connect masterDb of gkClient');
+        console.log('[05] Check if User exist');
         var User = masterDb.model('User', UserSchema);
         return User.find({ username: req.body.username})
       })
 
       .then((users) => {
         if (users.length==0) throw new Error('User does not exist!');
-
-        console.log('[05] Get user of gkClient by username');
         clientUser = users[0];
+
+        console.log('[06] Authenticate User');
         var checkPassword = new Promise((resolve, reject) => {
           if (!bcrypt.compareSync(req.body.password, clientUser.hash)) reject(new Error('Incorrect password!'));
           resolve();
@@ -76,10 +81,9 @@ var UsersController = {
       })
 
       .then(() => {
-        console.log('[06] Authorize user of gkClient by password');
+        console.log('[06] Generate JWT / AWT / Client and Sever session data');
 
         var simpleHash = new SimpleHash();
-
         const token = jwt.sign({ sub: clientUser._id }, ConstantsBase.secret);
         const awt = simpleHash.encode_array([
           gkClient['clientDb'],
@@ -87,11 +91,13 @@ var UsersController = {
         ]);
         const encodedTcodes = simpleHash.encode_array(clientUser.tcodes.sort());
 
-        const data = {
+        data = {
           _id: clientUser._id,
           username: clientUser.username,
           firstName: clientUser.firstname,
           lastName: clientUser.lastname,
+          title: clientUser.title,
+          avatar: clientUser.avatar,
           token: token,
           awt: awt,
           tcodes: encodedTcodes,
@@ -99,10 +105,30 @@ var UsersController = {
           defaultLge: clientUser.defaultLge,
           status: clientUser.status
         }
-        //console.log(data);
-        res.send(data);
 
+        req['clientDb'] = gkClient['clientDb'],
+
+        req['mySession'] = {
+          _id: clientUser._id,
+          tcodes: encodedTcodes,
+          wklge: clientUser.defaultLge,
+          wkyear: new Date().getFullYear().toString()
+        }
+
+        return Promise.resolve();
       })
+
+      .then(()=>{
+        // console.log(req.clientDb);
+        // console.log(req.mySession);
+        console.log('[Session]');
+        return sessionController.set(req, res);
+      })
+
+      .then(()=>{
+        res.send(data);
+      })
+
       .catch((err) => {
         console.log(err);
         res.status(400).send(err.message);

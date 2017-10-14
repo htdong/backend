@@ -1,5 +1,6 @@
 // External
 var mongoose = require("mongoose");
+var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
 // Schema
@@ -38,4 +39,14 @@ GkClientSchema.pre('save', (next) => {
   next();
 });
 
+GkClientSchema.plugin(mongoosePaginate);
+GkClientSchema.index({'$**': 'text'});
+/*
+GkClientSchema.index({
+  name: 'text',
+  db: 'text',
+  status1: 'text',
+  status2: 'text'
+});
+*/
 module.exports = GkClientSchema;

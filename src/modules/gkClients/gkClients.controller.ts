@@ -20,7 +20,7 @@ var GkClientsController = {
       console.log('[01] Connect systemDb');
       req.body.status1 = 'Inactive';
       req.body.status2 = 'Unmarked';
-      console.log(req.body);
+      // console.log(req.body);
       var GkClient = systemDb.model('GkClient', GkClientSchema);
       // Set status1 and status2
 
@@ -30,7 +30,7 @@ var GkClientsController = {
     })
     .then((client) => {
       console.log('[02] Save GkClient');
-      console.log(client);
+      // console.log(client);
       const result = {
         message: 'Creation completed!',
         data: client._id,
@@ -97,36 +97,108 @@ var GkClientsController = {
   findMasterList: (req: express.Request, res: express.Response): void => {
     var systemDbUri = ConstantsBase.urlSystemDb;
     var gkClient;
-
     mongoose.createConnection(systemDbUri, { useMongoClient: true })
     .then((systemDb) => {
       console.log('[01] Connect systemDb');
       var GkClient = systemDb.model('GkClient', GkClientSchema);
+
+      var GkClient1 = systemDb.model('GkClient', GkClientSchema);
+      var query = {$or: [{status1: 'Active'}, {status2: 'Marked'}]};
+      var options = {
+        select: '_id name db status1 status2',
+        sort: {_id: 1},
+        lean: false,
+        page: 2,
+        limit: 10
+      };
+      GkClient1.paginate(query, options)
+        .then((results) => {
+          console.log('[01] Get GkClients Pagination');
+          console.log(results);
+        })
+
       return GkClient.find({}).select('_id name clientDb status1 status2');
     })
     .then((clients) => {
       console.log('[02] Get GkClients');
       console.log(clients);
-      const gkData = {
-        code: 200,
-        message: '',
+      const result = {
+        message: 'Success',
         data: clients
       }
-      res.send(gkData);
-      /*
-      setTimeout(() => {
-            res.send(gkData);
-        }, 4000);
-      */
-
+      res.status(200).send(result);
+      //res.status(201).send(result);
+      //res.status(304).send();
+      //res.status(400).send();
+      //res.status(401).send();
+      //res.status(403).send();
+      //res.status(404).send();
+      //res.status(500).send();
     })
     .catch((err) => {
-      const gkData = {
+      const result = {
         code: 400,
         message: err.message
       }
       console.log(err);
-      res.status(400).send(gkData);
+      res.status(400).send(result);
+    });
+  },
+
+  findMasterListPagination: (req: express.Request, res: express.Response): void => {
+    var systemDbUri = ConstantsBase.urlSystemDb;
+    var gkClient;
+    // console.log(req['mySession']);
+
+    mongoose.createConnection(systemDbUri, { useMongoClient: true })
+    .then((systemDb) => {
+      console.log('[01] Connect systemDb');
+      var GkClient = systemDb.model('GkClient', GkClientSchema);
+
+      var params = req.query;
+      // console.log(params);
+      //console.log(req.query);
+      var query = {
+        $or: [
+          {name: {'$regex': params.filter, '$options' : 'i'}},
+          {clientDb: {'$regex': params.filter, '$options' : 'i'}}
+        ]
+
+      };
+      var options = {
+        select: '_id name clientDb status1 status2',
+        sort: JSON.parse(params.sort),
+        lean: false,
+        offset: parseInt(params.first),
+        limit: parseInt(params.rows)
+      };
+      // console.log(options);
+      return GkClient.paginate(query, options);
+    })
+    .then((results) => {
+      console.log('[02] Get GkClients Pagination');
+      // console.log(results);
+      const result = {
+        message: 'Success',
+        data: results.docs,
+        total: results.total,
+      }
+      res.status(200).send(result);
+      //res.status(201).send(result);
+      //res.status(304).send();
+      //res.status(400).send();
+      //res.status(401).send();
+      //res.status(403).send();
+      //res.status(404).send();
+      //res.status(500).send();
+    })
+    .catch((err) => {
+      const result = {
+        code: 400,
+        message: err.message
+      }
+      console.log(err);
+      res.status(400).send(result);
     });
   },
 
