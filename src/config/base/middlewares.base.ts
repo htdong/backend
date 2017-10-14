@@ -27,14 +27,37 @@ class MiddlewaresBase {
     app.use(bodyParser.urlencoded({ extended: false }));
 
     // Temporarily block for POSTMAN test
+    var myFilter = (req) => {
+      const unlessArray = [
+        '/',
+        '/users/authenticate',
+        '/users/register',
+        '/users/forgot',
+      ];
+      //console.log(unlessArray.indexOf(req.path));
+
+      const urls = req.path.split("/");
+      //console.log(urls[1]);
+
+      if ((unlessArray.indexOf(req.path)!=-1)||(urls[1]=='repo')) {
+        return true;
+      }
+      return false;
+    }
+
+    app.use(expressJwt({ secret: ConstantsBase.secret }).unless(myFilter));
+
+    /*
     app.use(expressJwt({ secret: ConstantsBase.secret })
       .unless({ path: [
         '/',
         '/users/authenticate',
         '/users/register',
-        '/users/forgot']
+        '/users/forgot',
+      ]
       })
     );
+    */
 
     app.use((req, res, next) => {
       let urls = req.path.split("/");
@@ -74,6 +97,9 @@ Progress Info:
             res.status(400).send(err.message);
           });
       }
+
+      // req['clientsPath'] = '/Users/donghoang/node/gk/clients';
+      // console.log(req['clientsPath']);
 
       // Important: More processing is required for the current request
       next();
