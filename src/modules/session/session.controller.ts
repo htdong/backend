@@ -7,6 +7,7 @@ mongoose.Promise = global.Promise;
 var ConstantsBase = require('../../config/base/constants.base');
 var SessionSchema = require('./session.schema');
 
+import  { SimpleHash } from '../../services/simpleHash.service';
 /* SESSION MANAGEMENT APPROACH
  * Session is created at the first time of authentication
  * Session is update after the first time of authentication
@@ -91,6 +92,63 @@ var SessionController = {
         console.log('[Session-xx] Session Initialization Error');
         return Promise.reject(err.message);
       });
+  },
+
+  update: (req: express.Request, res: express.Response): any => {
+    console.log('[Session-01] Retrieval for update');
+
+    // Session Db
+    var sessionDbUri = ConstantsBase.urlSessionDb;
+
+    mongoose.createConnection(sessionDbUri, { useMongoClient: true })
+      .then((sessionDb) => {
+        // Session Model - get clientId via token
+        const modelName = req.headers.token;
+        var Session = sessionDb.model(modelName, SessionSchema);
+        // console.log(modelName);
+
+        console.log('[Session-02] Check and return session');
+        return Session.findById(req.headers.usr);
+      })
+
+      .then((mySession)=>{
+        if (mySession) {
+          console.log('[Session-03] Session Update');
+
+          var simpleHash = new SimpleHash();
+          const awt = simpleHash.decode_array(JSON.parse(req.headers.awt));
+
+          // Any changes here must update schema as well
+          mySession.wklge = awt[0];
+          mySession.wkyear = awt[1];
+          // console.log(mySession);
+          return mySession.save();
+
+        } else {
+          let error = new Error(`Session is not available!`);
+          throw error;
+        }
+      })
+
+      .then((savedSession)=>{
+        const result = {
+          message: 'OK',
+          data: {},
+        }
+        // console.log(result);
+        res.status(200).send(result);
+      })
+
+      .catch((err)=> {
+        console.log('[Session-xx] Session Initialization Error');
+        const result = {
+          code: 500,
+          message: err.message
+        }
+        console.log(err);
+        res.status(500).send(result);
+      });
+
   },
 
 }

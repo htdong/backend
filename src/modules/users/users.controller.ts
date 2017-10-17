@@ -115,7 +115,7 @@ var UsersController = {
           clientId: req.body.token,
           wklge: clientUser.defaultLge,
           wkyear: new Date().getFullYear().toString(),
-          tcodes: encodedTcodes,
+          tcodes: clientUser.tcodes.sort(),
         }
 
         return Promise.resolve();

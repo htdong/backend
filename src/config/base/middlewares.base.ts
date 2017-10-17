@@ -27,6 +27,7 @@ class MiddlewaresBase {
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
 
+    /*
     // Temporarily block for POSTMAN test
     var myFilter = (req) => {
       const unlessArray = [

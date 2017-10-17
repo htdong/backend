@@ -4,8 +4,9 @@ console.log('...Loading [Routes]');
 import express = require("express");
 
 // Internal
-var GkClientsRoutes = require('../../modules/gkClients/gkClients.route');
 var UsersRoutes = require('../../modules/users/users.route');
+var GkClientsRoutes = require('../../modules/gkClients/gkClients.route');
+var SessionRoutes = require('../../modules/session/session.route')
 
 var app = express();
 var path = require('path');
@@ -25,8 +26,9 @@ class RoutesBase {
         app.use('/', router);
 
         // API restful services
-        app.use("/gkClients", GkClientsRoutes);
         app.use("/users", UsersRoutes);
+        app.use("/gkClients", GkClientsRoutes);
+        app.use("/settings", SessionRoutes)
 
         // Static files
         app.use(serveStatic(path.join('/Users/donghoang/node/gk')));
