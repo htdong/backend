@@ -85,12 +85,14 @@ var UsersController = {
 
         var simpleHash = new SimpleHash();
         const token = jwt.sign({ sub: clientUser._id }, ConstantsBase.secret);
+
         const awt = simpleHash.encode_array([
-          gkClient['clientDb'],
+          clientUser.defaultLge,
           new Date().getFullYear().toString(),
         ]);
         const encodedTcodes = simpleHash.encode_array(clientUser.tcodes.sort());
 
+        // data to pass back to frontend client
         data = {
           _id: clientUser._id,
           username: clientUser.username,
@@ -100,26 +102,26 @@ var UsersController = {
           avatar: clientUser.avatar,
           token: token,
           awt: awt,
+          wklge: clientUser.defaultLge,
+          wkyear: new Date().getFullYear().toString(),
           tcodes: encodedTcodes,
           lges: clientUser.lges,
-          defaultLge: clientUser.defaultLge,
           status: clientUser.status
         }
 
-        req['clientDb'] = gkClient['clientDb'],
-
+        // session to be stored for later use at backend server
         req['mySession'] = {
           _id: clientUser._id,
-          tcodes: encodedTcodes,
+          clientId: req.body.token,
           wklge: clientUser.defaultLge,
-          wkyear: new Date().getFullYear().toString()
+          wkyear: new Date().getFullYear().toString(),
+          tcodes: encodedTcodes,
         }
 
         return Promise.resolve();
       })
 
       .then(()=>{
-        // console.log(req.clientDb);
         // console.log(req.mySession);
         console.log('[Session]');
         return sessionController.set(req, res);

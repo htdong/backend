@@ -4,9 +4,10 @@ var Schema = mongoose.Schema;
 
 // Schema
 var SessionSchema = new Schema ({
-  tcodes: [],
+  clientId: {type: String},
   wklge: {type: String},
   wkyear: {type: String},
+  tcodes: [],
 });
 
 module.exports = SessionSchema;

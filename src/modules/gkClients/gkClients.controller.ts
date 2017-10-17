@@ -7,6 +7,8 @@ mongoose.Promise = global. Promise;
 var ConstantsBase = require('../../config/base/constants.base');
 var GkClientSchema = require('./gkClient.schema');
 
+var FilesService = require('../../services/files.service');
+
 var GkClientsController = {
 
   create: (req: express.Request, res: express.Response): void => {
@@ -328,6 +330,34 @@ var GkClientsController = {
       res.send({"error": "error in your request"});
     }
   },
+
+  upload: (req: express.Request, res: express.Response): void => {
+
+    var filesService = new FilesService();
+
+    filesService.upload(req, res)
+      .then((result) => {
+        console.log(result);
+
+        // TODO: Process data upload into collection here
+
+        res.status(200).send(result);
+      })
+      .catch((err) => {
+        console.log(err);
+
+        const result = {
+          message: 'Bad request',
+          data: err.message,
+        }
+        res.status(400).send(result);
+      })
+
+  },
+
+  download: (req: express.Request, res: express.Response): void => {
+
+  }
 
 };
 

@@ -16,4 +16,5 @@ router.get("/:_id", GkClientsController.findById);
 router.put("/:_id", GkClientsController.update);
 router.delete("/:_id", GkClientsController.delete);
 
+router.post("/upload", GkClientsController.upload);
 module.exports = router;

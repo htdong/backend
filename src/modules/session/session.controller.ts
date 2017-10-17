@@ -1,25 +1,39 @@
 // External
 import express = require("express");
 var mongoose = require("mongoose");
-mongoose.Promise = global. Promise;
+mongoose.Promise = global.Promise;
 
 // Internal
 var ConstantsBase = require('../../config/base/constants.base');
-import  { SimpleHash } from '../../services/simpleHash.service';
 var SessionSchema = require('./session.schema');
+
+/* SESSION MANAGEMENT APPROACH
+ * Session is created at the first time of authentication
+ * Session is update after the first time of authentication
+ * Session is retrievable through:
+ * - db:                  gkSession
+ * - collection:          client Id
+      + first authentication:   client Id is stored in req.body.token
+      + after authentication:   client Id is stored in req.headers.token
+ * - document:            user Id
+ * - schema of session:
+ *    + is defined at session.schema.ts
+ *    + is created/ update at users.controller.ts
+ */
 
 var SessionController = {
 
   set: (req: express.Request, res: express.Response): any => {
     console.log('[Session-01] Initialization');
 
+    // Session Db
     var sessionDbUri = ConstantsBase.urlSessionDb;
-    // console.log(sessionDbUri);
     var sessionDb = mongoose.createConnection(sessionDbUri, { useMongoClient: true });
 
-    const modelName = req['clientDb'];
-    // console.log(modelName);
+    // Session Model
+    const modelName = req.body.token;
     var Session = sessionDb.model(modelName, SessionSchema);
+    // console.log(modelName);
 
     const sessionContent = req['mySession'];
     // console.log(sessionContent);
@@ -27,16 +41,21 @@ var SessionController = {
     return Promise.resolve()
       .then(()=>{
         console.log('[Session-02] Check if session exists');
+        // req['mySession']['_id'] store user id
         return Session.findById(req['mySession']['_id']);
       })
 
       .then((mySession)=>{
         if (mySession) {
           console.log('[Session-03] Session Update');
-          mySession.tcodes = req['mySession']['tcodes'];
+
+          // Any changes here must update schema as well
+          mySession.clientId = req['mySession']['clientId'];
           mySession.wklge = req['mySession']['wklge'];
           mySession.wkyear = req['mySession']['wkyear'];
+          mySession.tcodes = req['mySession']['tcodes'];
           return mySession.save();
+
         } else {
           console.log('[Session-03] Session Create New');
           const newSession = new Session(req['mySession']);
@@ -52,36 +71,28 @@ var SessionController = {
   },
 
   get: (req: express.Request, res: express.Response) => {
-    console.log('[Session-01] Retrieval');
-
-    var sessionDbUri = ConstantsBase.urlSessionDb;
-    // console.log(sessionDbUri);
-    var sessionDb = mongoose.createConnection(sessionDbUri, { useMongoClient: true });
-
-    var simpleHash = new SimpleHash();
-    const awt = simpleHash.decode_array(JSON.parse(req.headers.awt));
-    const modelName = awt[0];
-    // console.log(modelName);
-    var Session = sessionDb.model(modelName, SessionSchema);
-
     return Promise.resolve()
       .then(()=>{
-        console.log('[Session-02] Check if session exists');
+        console.log('[Session-01] Retrieval');
+
+        // Session Db
+        var sessionDbUri = ConstantsBase.urlSessionDb;
+        var sessionDb = mongoose.createConnection(sessionDbUri, { useMongoClient: true });
+
+        // Session Model
+        const modelName = req.headers.token;
+        var Session = sessionDb.model(modelName, SessionSchema);
+        console.log(modelName);
+
+        console.log('[Session-02] Check and return session');
         return Session.findById(req.headers.usr);
       })
-
-      .then((mySession)=>{
-        console.log('[Session-02] Return session regardless its status');
-        return Promise.resolve(mySession);
-      })
-
       .catch((err)=> {
         console.log('[Session-xx] Session Initialization Error');
         return Promise.reject(err.message);
       });
+  },
 
-
-  }
 }
 
 module.exports = SessionController;

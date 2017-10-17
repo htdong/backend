@@ -12,6 +12,7 @@ import * as logger from 'morgan';
 var ConstantsBase = require('./constants.base');
 var DB = require('../../services/dbConnection.service');
 var RoutesBase = require('./routes.base');
+import  { SimpleHash } from '../../services/simpleHash.service';
 
 class MiddlewaresBase {
 
@@ -48,18 +49,19 @@ class MiddlewaresBase {
     app.use(expressJwt({ secret: ConstantsBase.secret }).unless(myFilter));
 
     /*
-    app.use(expressJwt({ secret: ConstantsBase.secret })
-      .unless({ path: [
-        '/',
-        '/users/authenticate',
-        '/users/register',
-        '/users/forgot',
-      ]
-      })
-    );
-    */
+     * Session Parameters
+     * [1] DB (gkcSession)            FIXED
+     * [2] Collection                 client id = token
+     * [3] Session (userId)           req.headers.usr
+     * Session Store
+     * - User's right population after authentication
+     * - Cache of user info and other session data
+     * - TTL or Expiry concept
+     * - Separate of concerns (session vs user) and easy maintenance
+     */
 
     app.use((req, res, next) => {
+      let simpleHash = new SimpleHash();
       let urls = req.path.split("/");
       console.log(`
 --------------------------------
@@ -68,45 +70,36 @@ NEW REQUEST INFO:
 [2] Method:  ${req.method}
 [3] Option:  ${req.body.option}
 [4] Params:  ${JSON.stringify(urls)}
-[5] Received:${Date.now()}
-[6] Array Web Token [AWT]: ${req.headers.awt}
-[7] User Id: ${req.headers.usr}
+[5] Token:
+    - In headers: ${req.headers.token}
+    - In body:    ${req.body.token}
+[6] Array Web Token (AWT[0]=wklge; AWT[1]=wkyear): ${req.headers.awt}
+[7] Userid: ${req.headers.usr}
 --------------------------------
-Progress Info:
+PROGRESS INFO:
       `);
 
-      /*
-       * Session Store
-       * [1] DB (gkcSession)            FIXED
-       * [2] Collection (clientcode)    decode_array(req.headers.awt[0])
-       * [3] Session (userId)           req.headers.usr
-       * Decision: [1]
-       * - To calculate user's right population after authentication
-       * - To cache the latest user info and other session data separately
-       * - To implement TTL or Expiry concept
-       * - To separate of concerns (session vs user) and easy maintenance
-       */
       if (req.headers.usr && req.headers.awt) {
         sessionController.get(req, res)
           .then((mySession)=>{
             req['mySession'] = mySession;
-            // console.log(req['mySession']);
+            //console.log(req['mySession']);
+            next();
           })
           .catch((err)=>{
             console.log(err);
             res.status(400).send(err.message);
           });
+      } else {
+        // Important: More processing is required for the current request
+        next();
       }
-
-      // req['clientsPath'] = '/Users/donghoang/node/gk/clients';
-      // console.log(req['clientsPath']);
-
-      // Important: More processing is required for the current request
-      next();
     });
 
-     app.use(new RoutesBase().routes);
-     return app;
+    app.use(new RoutesBase().routes);
+
+    return app;
+
   }
 
 };
