@@ -10,7 +10,7 @@ import * as logger from 'morgan';
 
 // Internal packages
 var ConstantsBase = require('./constants.base');
-var DB = require('../../services/dbConnection.service');
+//var DB = require('../../services/dbConnection.service');
 var RoutesBase = require('./routes.base');
 import  { SimpleHash } from '../../services/simpleHash.service';
 
@@ -27,7 +27,7 @@ class MiddlewaresBase {
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
 
-    /*
+
     // Temporarily block for POSTMAN test
     var myFilter = (req) => {
       const unlessArray = [
