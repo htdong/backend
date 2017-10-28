@@ -83,14 +83,13 @@ var UsersController = {
       .then(() => {
         console.log('[06] Generate JWT / AWT / Client and Sever session data');
 
-        var simpleHash = new SimpleHash();
         const token = jwt.sign({ sub: clientUser._id }, ConstantsBase.secret);
 
-        const awt = simpleHash.encode_array([
+        const awt = SimpleHash.encode_array([
           clientUser.defaultLge,
           new Date().getFullYear().toString(),
         ]);
-        const encodedTcodes = simpleHash.encode_array(clientUser.tcodes.sort());
+        const encodedTcodes = SimpleHash.encode_array(clientUser.tcodes.sort());
 
         // data to pass back to frontend client
         data = {

@@ -6,6 +6,7 @@ mongoose.Promise = global.Promise;
 // Internal
 var ConstantsBase = require('../../config/base/constants.base');
 var SessionSchema = require('./session.schema');
+var response = require('../../services/response.service');
 
 import  { SimpleHash } from '../../services/simpleHash.service';
 /* SESSION MANAGEMENT APPROACH
@@ -24,130 +25,132 @@ import  { SimpleHash } from '../../services/simpleHash.service';
 
 var SessionController = {
 
-  set: (req: express.Request, res: express.Response): any => {
-    console.log('[Session-01] Initialization');
+  /* Return: Async new or updated session document */
+  set: async(req: express.Request, res: express.Response)=> {    
+    try {
+      console.log('[Session-01] Initialization');      
+      
+      const sessionDbUri = ConstantsBase.urlSessionDb;
+      const modelName = req.body.token;
 
-    // Session Db
-    var sessionDbUri = ConstantsBase.urlSessionDb;
-    var sessionDb = mongoose.createConnection(sessionDbUri, { useMongoClient: true });
+      let sessionDb = await mongoose.createConnection(sessionDbUri, { useMongoClient: true });    
+      let Session = sessionDb.model(modelName, SessionSchema);
+      
+      const sessionContent = req['mySession'];
 
-    // Session Model
-    const modelName = req.body.token;
-    var Session = sessionDb.model(modelName, SessionSchema);
-    // console.log(modelName);
+      console.log('[Session-02] Check if session exists');
+      let existedSession = await Session.findById(req['mySession']['_id']);
 
-    const sessionContent = req['mySession'];
-    // console.log(sessionContent);
+      let mySession;
+      if (existedSession) {        
+        console.log('[Session-03] Session should be updated');
+        // Any changes here must update schema as well
+        existedSession.clientId = req['mySession']['clientId'];
+        existedSession.wklge = req['mySession']['wklge'];
+        existedSession.wkyear = req['mySession']['wkyear'];
+        existedSession.tcodes = req['mySession']['tcodes'];
+        mySession =  await existedSession.save();        
+      } else {
+        console.log('[Session-03] Session should be newly created');
+        const newSession = new Session(req['mySession']);
+        mySession = await newSession.save();
+      }
 
-    return Promise.resolve()
-      .then(()=>{
-        console.log('[Session-02] Check if session exists');
-        // req['mySession']['_id'] store user id
-        return Session.findById(req['mySession']['_id']);
-      })
+      if (!mySession) {
+        throw new Error('Session could not be created or updated!');           
+      } else {
+        console.log('[Session-04] Session process is completed!');
+        return mySession;
+      }
 
-      .then((mySession)=>{
-        if (mySession) {
-          console.log('[Session-03] Session Update');
-
-          // Any changes here must update schema as well
-          mySession.clientId = req['mySession']['clientId'];
-          mySession.wklge = req['mySession']['wklge'];
-          mySession.wkyear = req['mySession']['wkyear'];
-          mySession.tcodes = req['mySession']['tcodes'];
-          return mySession.save();
-
-        } else {
-          console.log('[Session-03] Session Create New');
-          const newSession = new Session(req['mySession']);
-          return newSession.save();
-        }
-      })
-
-      .catch((err)=> {
-        console.log('[Session-xx] Session Initialization Error');
-        return Promise.reject(err.message);
-      });
-
+    }
+    catch (error) {      
+      const result = {
+        code: error.code || 500,
+        message: 'Session Initialization Error!',
+        data: error.message
+      }
+      return response.serverError(res, result); 
+    }
   },
 
-  get: (req: express.Request, res: express.Response) => {
-    return Promise.resolve()
-      .then(()=>{
-        console.log('[Session-01] Retrieval');
+  /* Return: Async a retrieved session document */
+  get: async(req: express.Request, res: express.Response) => {
+    try {
+      console.log('[Session-01] Retrieval');
+      
+      var sessionDbUri = ConstantsBase.urlSessionDb;
+      const modelName = req.headers.token;
+      
+      var sessionDb = await mongoose.createConnection(sessionDbUri, { useMongoClient: true });      
+      var Session = sessionDb.model(modelName, SessionSchema);
 
-        // Session Db
-        var sessionDbUri = ConstantsBase.urlSessionDb;
-        var sessionDb = mongoose.createConnection(sessionDbUri, { useMongoClient: true });
+      console.log('[Session-02] Check and return session');
+      let mySession = await Session.findById(req.headers.usr);
 
-        // Session Model
-        const modelName = req.headers.token;
-        var Session = sessionDb.model(modelName, SessionSchema);
-        console.log(modelName);
-
-        console.log('[Session-02] Check and return session');
-        return Session.findById(req.headers.usr);
-      })
-      .catch((err)=> {
-        console.log('[Session-xx] Session Initialization Error');
-        return Promise.reject(err.message);
-      });
+      if (!mySession) {
+        throw new Error('Session could not be retrieved!');           
+      } else {
+        console.log('[Session-03] Session is retrieved successfully!');
+        return mySession;
+      }
+    }
+    catch (error) {
+      const result = {
+        code: error.code || 500,
+        message: 'Session Retrieval Error',
+        data: error.message
+      }
+      return response.serverError(res, result); 
+    }
   },
 
-  update: (req: express.Request, res: express.Response): any => {
-    console.log('[Session-01] Retrieval for update');
+  /* Return: Async directly return response via success or error [served as controler] */
+  update: async(req: express.Request, res: express.Response) => {
+    try {
+      console.log('[Session-01] Retrieval for update');
+      const sessionDbUri = ConstantsBase.urlSessionDb;
+      const modelName = req.headers.token;
+      let sessionDb = await mongoose.createConnection(sessionDbUri, { useMongoClient: true });      
+      let Session = sessionDb.model(modelName, SessionSchema);
 
-    // Session Db
-    var sessionDbUri = ConstantsBase.urlSessionDb;
+      console.log('[Session-02] Check existed session');
+      let existedSession = await Session.findById(req.headers.usr);
 
-    mongoose.createConnection(sessionDbUri, { useMongoClient: true })
-      .then((sessionDb) => {
-        // Session Model - get clientId via token
-        const modelName = req.headers.token;
-        var Session = sessionDb.model(modelName, SessionSchema);
-        // console.log(modelName);
+      let mySession;
+      if (!existedSession) {
+        throw new Error('Session could not be retrieved for update!');           
+      } else {
+        console.log('[Session-03] Session is being updated');    
+        const awt = SimpleHash.decode_array(JSON.parse(req.headers.awt));
 
-        console.log('[Session-02] Check and return session');
-        return Session.findById(req.headers.usr);
-      })
-
-      .then((mySession)=>{
-        if (mySession) {
-          console.log('[Session-03] Session Update');
-
-          var simpleHash = new SimpleHash();
-          const awt = simpleHash.decode_array(JSON.parse(req.headers.awt));
-
-          // Any changes here must update schema as well
-          mySession.wklge = awt[0];
-          mySession.wkyear = awt[1];
-          // console.log(mySession);
-          return mySession.save();
-
-        } else {
-          let error = new Error(`Session is not available!`);
-          throw error;
-        }
-      })
-
-      .then((savedSession)=>{
+        // Any changes here must update schema as well
+        existedSession.wklge = awt[0];
+        existedSession.wkyear = awt[1];
+        mySession = await existedSession.save();  
+      }
+      
+      if (!mySession) {
+        throw new Error('Session could not be updated!');           
+      } else {
+        console.log('[Session-04] Session is updated successfully!');
+        
         const result = {
           message: 'OK',
           data: {},
         }
-        // console.log(result);
-        res.status(200).send(result);
-      })
-
-      .catch((err)=> {
-        console.log('[Session-xx] Session Initialization Error');
-        const result = {
-          code: 500,
-          message: err.message
-        }
-        console.log(err);
-        res.status(500).send(result);
-      });
+        response.ok(res, result);        
+      }
+      
+    }
+    catch (error) {
+      const result = {
+        code: error.code || 500,
+        message: 'Session Retrieval Error',
+        data: error.message
+      }
+      return response.serverError(res, result); 
+    }
 
   },
 

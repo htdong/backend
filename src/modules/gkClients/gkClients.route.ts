@@ -12,6 +12,7 @@ router.post("/", GkClientsController.create);
 // router.get("/", GkClientsController.findAll);
 // router.get("/masterList", GkClientsController.findMasterList);
 router.get("/masterListPagination", GkClientsController.findMasterListPagination);
+router.get("/download", GkClientsController.download);
 router.get("/:_id", GkClientsController.findById);
 
 router.put("/:_id", GkClientsController.update);
@@ -24,4 +25,6 @@ router.patch("/unmark/:_id", GkClientsController.unmark);
 router.delete("/:_id", GkClientsController.delete);
 
 router.post("/upload", GkClientsController.upload);
+router.post("/upsert", GkClientsController.upsert);
+
 module.exports = router;

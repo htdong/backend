@@ -84,10 +84,11 @@ PROGRESS INFO:
         sessionController.get(req, res)
           .then((mySession)=>{
             req['mySession'] = mySession;
-            //console.log(req['mySession']);
+            // console.log(req['mySession']);
             next();
           })
           .catch((err)=>{
+            console.log('Error');
             console.log(err);
             res.status(400).send(err.message);
           });
