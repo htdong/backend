@@ -135,8 +135,8 @@ module.exports.createOrSaveFailed = function(res, error) {
 
 module.exports.upsertHandler = function(res, result) {
 	console.log(result);
-	if (!result.data.created) {
-		if (!result.data.errors) {
+	if (!result.data.nModified) {
+		if (!result.data.nErrors) {
 			return res.status(304).json({});	// No new, no error
 		} else {
 			var response = {
@@ -147,13 +147,13 @@ module.exports.upsertHandler = function(res, result) {
 			return res.status(412).json(response);	// All failed
 		}
 	} else {
-		if (!result.data.errors) {
+		if (!result.data.nErrors) {
 			var response = {
-				code: 201,
+				code: 200,
 				message: result.message || '',
 				data: result.data,
 			};
-			return res.status(201).json(response);	// All success
+			return res.status(200).json(response);	// All success
 		} else {
 			var response = {
 				code: 206,

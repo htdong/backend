@@ -64,15 +64,25 @@ class FilesService {
 
   async downloadCSV(req, res, csvData) {
     try {
-      const userFilename = req.query.filename || 'default'
+      const clientId = req['mySession'].clientId;
+      const userFilename = req.query.filename || 'download'
       const filename = userFilename + '.csv';
-      const path = '../repo/download/' + filename;
+      // const path = '../repo/' + clientId + '/download/' + filename;
+      const dir = '../repo/download/';
+      const path = dir + filename;
+
+      if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir);
+      }
+
       fs.writeFile(path, csvData, function(err) {
         if (err) throw err;
         console.log('Send file address to client for downloading');
         res.json({filename: filename});
       });      
+      
     }
+
     catch(error) {
       const result = {
         code: error.code || 500,
