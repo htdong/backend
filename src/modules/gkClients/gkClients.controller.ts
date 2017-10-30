@@ -33,25 +33,38 @@ var GkClientsController = {
     } 
   },
 
-  trackHistory: async (req, tcode: string, oldData, newData) => {
+  trackHistory: async (req, multi:boolean, tcode: string, oldData, newData) => {
     try {
       const systemDbUri = ConstantsBase.urlSystemDb;
       const systemDb = await mongoose.createConnection(systemDbUri, { useMongoClient: true });      
       let GkClientHistory = systemDb.model('GkClientHistory', GkClientHistorySchema);
       
-      delete oldData._id;
-      delete newData._id;
+      let history;
+      if (!multi) {        
+        const id = newData._id || oldData._id;
+        
+        delete oldData._id;
+        delete newData._id;
 
-      const diff = deep(oldData, newData);
-      console.log(diff);
-      
-      const history = {
-        username: req['mySession']._id,
-        tcode: tcode,
-        old: oldData,
-        diff: diff
+        const diff = deep(oldData, newData);
+        console.log(diff);
+              
+        history = {
+          docId: id,
+          username: req['mySession']._id,
+          tcode: tcode,
+          diff: diff
+        }
+      } else {
+        history = {
+          docId: '',
+          username: req['mySession']._id,
+          tcode: tcode,
+          diff: newData
+        }
       }
-      
+      console.log(history);
+            
       let gkClientHistory = new GkClientHistory(history);
       
       return gkClientHistory.save();
@@ -61,6 +74,9 @@ var GkClientsController = {
     }     
   },
 
+  /*
+   * INDIVIDUAL PROCESSING 
+   */
   create: async (req: express.Request, res: express.Response) => {
     try {
       const tcode = 'gkcln11';
@@ -73,7 +89,7 @@ var GkClientsController = {
       
       let client = await gkClient.save(); 
             
-      let trackHistory = GkClientsController.trackHistory(req, tcode, {_id:''}, gkClient.toObject());
+      let trackHistory = GkClientsController.trackHistory(req, false, tcode, {_id:''}, gkClient.toObject());
 
       const result = {
         message: 'Creation completed!',
@@ -192,7 +208,7 @@ var GkClientsController = {
           let updatedClient = await client.save();
           if (updatedClient) {          
 
-            let trackHistory = GkClientsController.trackHistory(req, tcode, JSON.parse(oldClient), updatedClient.toObject());            
+            let trackHistory = GkClientsController.trackHistory(req, false, tcode, JSON.parse(oldClient), updatedClient.toObject());            
 
             const result = {
               message: 'OK',
@@ -257,7 +273,7 @@ var GkClientsController = {
           let updatedClient = await client.save();
           if (updatedClient) {
 
-            let trackHistory = GkClientsController.trackHistory(req, tcode, JSON.parse(oldClient), updatedClient.toObject());            
+            let trackHistory = GkClientsController.trackHistory(req, false, tcode, JSON.parse(oldClient), updatedClient.toObject());            
 
             const result = {
               message: 'OK',
@@ -321,7 +337,7 @@ var GkClientsController = {
           if (removedClient) {
             // console.log(removedClient);
             
-            let trackHistory = GkClientsController.trackHistory(req, tcode, removedClient.toObject(), {_id:''});            
+            let trackHistory = GkClientsController.trackHistory(req, false, tcode, removedClient.toObject(), {_id:''});            
             
             const result = {
               message: 'OK',
@@ -344,8 +360,17 @@ var GkClientsController = {
     }
   },
 
+  viewChangeById: async (req: express.Request, res: express.Response) => {
+
+  },
+
+  /*
+   * COLLECTIVE PROCESSING 
+   */
   upload: async(req: express.Request, res: express.Response) => {
     try {
+      const tcode = 'gkcln21';
+
       console.log('...[1]Upload file to server');
       let fileService = new FilesService();
       let uploadStatus = await fileService.upload(req, res);
@@ -411,6 +436,11 @@ var GkClientsController = {
               },
             });
 
+            if (uploadData.length - errorArray.length) {                                          
+              const filename = uploadStatus.data.path.split('/');
+              let trackHistory = GkClientsController.trackHistory(req, true, tcode, {}, filename[filename.length - 1]);  
+            }
+            
             return response.upsertHandler(res, result);            
           });
 
@@ -489,6 +519,8 @@ var GkClientsController = {
 
   upsert: async(req: express.Request, res: express.Response) => {
     try {
+      const tcode = 'gkcln23';
+      
       console.log('...[1]Upload file to server');
       let fileService = new FilesService();
       let uploadStatus = await fileService.upload(req, res);
@@ -553,6 +585,11 @@ var GkClientsController = {
               },
             });
 
+            if (uploadData.length - errorArray.length) {                                          
+              const filename = uploadStatus.data.path.split('/');
+              let trackHistory = GkClientsController.trackHistory(req, true, tcode, {}, filename[filename.length - 1]);  
+            }
+
             return response.upsertHandler(res, result);            
           });          
        });
@@ -583,18 +620,23 @@ var GkClientsController = {
       let uploadData = [];            
       let errArray = [];    
       
+      let tcode;
       let data;
       switch (patchType) {
         case 'disable':
+          tcode = 'gkcln24';
           data = {status1: 'Inactive'};
           break;
         case 'enable':
+          tcode = 'gkcln25';
           data = {status1: 'Active'};
           break;  
         case 'mark':
+          tcode = 'gkcln26';
           data = {status2: 'Marked'};
           break;  
         case 'unmark':
+          tcode = 'gkcln27';
           data = {status2: 'Unmarked'};
           break;  
         default:
@@ -632,7 +674,13 @@ var GkClientsController = {
             let result = ({
               message: message,
               data: data,
-            });            
+            });
+            
+            if (data.nModified) {                                          
+              const filename = uploadStatus.data.path.split('/');
+              let trackHistory = GkClientsController.trackHistory(req, true, tcode, {}, filename[filename.length - 1]);  
+            }
+
             return response.ok(res, result);
           });          
        });
@@ -666,6 +714,8 @@ var GkClientsController = {
 
   deleteCollective: async(req: express.Request, res: express.Response) => {
     try {
+      const tcode = 'gkcln28';
+
       console.log('...[1]Upload file to server');
       let fileService = new FilesService();
       let uploadStatus = await fileService.upload(req, res);
@@ -708,7 +758,13 @@ var GkClientsController = {
             let result = ({
               message: message,
               data: data.result,
-            });            
+            });
+            
+            if (data.result.n) {                                          
+              const filename = uploadStatus.data.path.split('/');
+              let trackHistory = GkClientsController.trackHistory(req, true, tcode, {}, filename[filename.length - 1]);  
+            }
+
             return response.ok(res, result);
           });
                      
@@ -724,6 +780,10 @@ var GkClientsController = {
       return response.serverError(res, result);  
     }      
 
+  },
+
+  history: async (req: express.Request, res: express.Response) => {
+    
   },
 
   apiMasterList: async(req: express.Request, res: express.Response) => {

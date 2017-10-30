@@ -5,9 +5,10 @@ var Schema = mongoose.Schema;
 
 // Schema
 var GkClientHistorySchema = new Schema ({
-  username: String,
+  docId: String,
+  username: String,  
+  multi: Boolean,
   tcode: String,  
-  old: {},
   diff: [], 
   created_at: Date,
 }, { collection: 'clientsHistory' });

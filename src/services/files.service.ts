@@ -25,7 +25,8 @@ class FilesService {
           cb(null, path);
         },
         filename: function (req, file, cb) {
-          cb(null, file.originalname)
+          cb(null, Date.now() +'-'+file.originalname);        
+          
         }
       });
 
@@ -64,10 +65,8 @@ class FilesService {
 
   async downloadCSV(req, res, csvData) {
     try {
-      const clientId = req['mySession'].clientId;
       const userFilename = req.query.filename || 'download'
       const filename = userFilename + '.csv';
-      // const path = '../repo/' + clientId + '/download/' + filename;
       const dir = '../repo/download/';
       const path = dir + filename;
 
@@ -80,7 +79,7 @@ class FilesService {
         console.log('Send file address to client for downloading');
         res.json({filename: filename});
       });      
-      
+
     }
 
     catch(error) {
