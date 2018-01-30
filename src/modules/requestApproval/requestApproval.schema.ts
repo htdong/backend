@@ -4,34 +4,25 @@ var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
 // Schema
-var GkClientSchema = new Schema ({
-  name: {
+var RequestApprovalSchema = new Schema ({
+  desc: {
     type: String,
     required: true,
-    minlength: 5
   },
-  addresses: [],
-  contacts: [],
-  clientDb: {
+  items: [],
+  tcode: {
     type: String,
     required: true,
-    unique: true
+    minlength: 3
   },
-  remarks: [],
-  solutions: [
-    {
-      type: String,
-      ref: 'solutions'
-    }
-  ],
   status1: { type: String },
   status2: { type: String },
   created_at: Date,
   updated_at: Date,
-}, { collection: 'clients' });
+}, { collection: 'requestApproval' });
 
 //IMPORTANT: Can not use arrow function here to ensure rebindable
-GkClientSchema.pre('save', function (next) {
+RequestApprovalSchema.pre('save', function (next) {
   let currentDate = new Date();
   this.updated_at = currentDate;
   if (!this.created_at) {
@@ -40,14 +31,14 @@ GkClientSchema.pre('save', function (next) {
   next();
 });
 
-GkClientSchema.plugin(mongoosePaginate);
-GkClientSchema.index({'$**': 'text'});
+RequestApprovalSchema.plugin(mongoosePaginate);
+RequestApprovalSchema.index({'$**': 'text'});
 /*
-GkClientSchema.index({
+GkRequestSchema.index({
   name: 'text',
   db: 'text',
   status1: 'text',
   status2: 'text'
 });
 */
-module.exports = GkClientSchema;
+module.exports = RequestApprovalSchema;

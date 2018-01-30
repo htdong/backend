@@ -4,17 +4,17 @@ var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
 // Schema
-var GkClientHistorySchema = new Schema ({
+var GkRequestHistorySchema = new Schema ({
   docId: String,
   username: String,  
   multi: Boolean,
   tcode: String,  
   diff: [], 
   created_at: Date,
-}, { collection: 'clientsHistory' });
+}, { collection: 'requestsHistory' });
 
 //IMPORTANT: Can not use arrow function here to ensure rebindable
-GkClientHistorySchema.pre('save', function (next) {
+GkRequestHistorySchema.pre('save', function (next) {
   let currentDate = new Date();
   if (!this.created_at) {
     this.created_at = currentDate;
@@ -22,14 +22,14 @@ GkClientHistorySchema.pre('save', function (next) {
   next();
 });
 
-GkClientHistorySchema.plugin(mongoosePaginate);
-GkClientHistorySchema.index({'$**': 'text'});
+GkRequestHistorySchema.plugin(mongoosePaginate);
+GkRequestHistorySchema.index({'$**': 'text'});
 /*
-GkClientSchema.index({
+GkRequestSchema.index({
   name: 'text',
   db: 'text',
   status1: 'text',
   status2: 'text'
 });
 */
-module.exports = GkClientHistorySchema;
+module.exports = GkRequestHistorySchema;

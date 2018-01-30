@@ -1,15 +1,20 @@
 // External
 import express = require("express");
 var multer = require('multer');
-var fs = require("fs");
+var fs = require("fs-extra");
+var path = require('path');
 
 // Internal
 var sessionController = require('../modules/session/session.controller');
 var response = require('../services/response.service');
-
+var rootPath = '';
+// var rootPath = '/Users/donghoang/node/gk/repo/';
 class FilesService {
 
-  constructor() { }
+  constructor() {
+    rootPath = path.join('/', 'Users', 'donghoang', 'node', 'gk', 'repo');
+    console.log(rootPath);
+  }
 
   upload(req: express.Request, res: express.Response) {
 
@@ -25,8 +30,8 @@ class FilesService {
           cb(null, path);
         },
         filename: function (req, file, cb) {
-          cb(null, Date.now() +'-'+file.originalname);        
-          
+          cb(null, Date.now() +'-'+file.originalname);
+
         }
       });
 
@@ -63,6 +68,68 @@ class FilesService {
 
   }
 
+  uploadRequestFile(req: express.Request, res: express.Response) {
+
+    return new Promise((resolve, reject) => {
+
+      // Keep uploaded file original name and extension
+      const storage = multer.diskStorage({
+
+        destination: function (req, file, cb) {
+          var clientId = req['mySession'].clientId;
+          var docId = req.params._id;
+          // const myPath = rootPath + '/' + clientId + '/requests/' + docId;
+          const myPath = path.join(rootPath, clientId, 'requests', docId);
+
+          // If directory path does not exist, create a new one -
+          // Must be sure /Users/donghoang/node/gk/repo/' + clientId + '/requests/ already exist
+          if (!fs.existsSync(myPath)) {
+              fs.mkdirSync(myPath);
+          }
+
+          cb(null, myPath);
+        },
+        filename: function (req, file, cb) {
+          cb(null, Date.now() + '-' + file.originalname);
+        }
+      });
+
+      var uploadHandler = multer({storage: storage}).single('files');
+
+      uploadHandler(req, res, function(err) {
+        if (err) {
+          console.log(err);
+          reject(err);
+        } else {
+          const fileInfo = {
+            fieldname: req['file'].fieldname,
+            docId: req.params._id,
+            originalname: req['file'].originalname,
+            uploadedname: req['file'].filename,
+            desc: req['file'].originalname,
+            size: req['file'].size,
+            encoding: req['file'].encoding,
+            mimetype: req['file'].mimetype,
+            username: req['mySession'].username,
+            status: 'Unmarked',
+            destination: req['file'].destination,
+            localpath: req['file'].path
+          }
+          console.log(fileInfo);
+
+          const result = {
+            message: '',
+            data: fileInfo
+          }
+
+          resolve(result);
+        }
+
+      });
+    })
+
+  }
+
   async downloadCSV(req, res, csvData) {
     try {
       const userFilename = req.query.filename || 'download'
@@ -78,7 +145,7 @@ class FilesService {
         if (err) throw err;
         console.log('Send file address to client for downloading');
         res.json({filename: filename});
-      });      
+      });
 
     }
 
@@ -88,14 +155,66 @@ class FilesService {
         message: error.message,
         data: "Download failed"
       }
-      return response.serverError(res, result);      
+      return response.serverError(res, result);
     }
-    
+
   }
 
-  
-  async upload1(req: express.Request, res: express.Response) { 
-    try {      
+  downloadRequestFile(req, res, requestFile) {
+    try {
+      // const sourceFile = rootPath +  + '/requests/' + requestFile.docId + '/' + requestFile.uploadedname;
+      const sourceFile = path.join(rootPath, req['mySession'].clientId, 'requests', requestFile.docId, requestFile.uploadedname);
+      console.log('Source file exist?', fs.existsSync(sourceFile));
+
+      const destDir = path.join(rootPath, 'download');
+      // const destDir = '../repo/download/';
+      console.log('Destination dir exist?', fs.existsSync(destDir));
+
+      const destFile = path.join(destDir, requestFile.originalname);
+      console.log('Destination file exist?', fs.existsSync(destFile));
+
+      if (!fs.existsSync(destDir)){
+        fs.mkdirSync(destDir);
+      }
+
+      console.log('Source: ', sourceFile);
+      console.log('Destination: ', destFile);
+
+      // If file exist do not copy again
+      if (!fs.existsSync(destFile)) {
+        // Async
+        fs.copy(sourceFile, destFile)
+          .then(() => {
+            console.log('Destination file exist?', fs.existsSync(destFile));
+            console.log('Send file address to client for downloading', destFile);
+            const result = {
+              message: '',
+              data: requestFile.originalname
+            }
+            response.ok(res, result);
+          })
+          .catch(err => console.error(err));
+      } else {
+        const result = {
+          message: '',
+          data: requestFile.originalname
+        }
+        response.ok(res, result);
+      }
+    }
+    catch(error) {
+      const result = {
+        code: error.code || 500,
+        message: error.message,
+        data: "Download failed"
+      }
+      return response.serverError(res, result);
+    }
+
+  }
+
+  async upload1(req: express.Request, res: express.Response) {
+    try {
       // Keep uploaded file original name and extension
       const storage = multer.diskStorage({
         destination: (req, file, cb) => {
@@ -113,10 +232,10 @@ class FilesService {
       let uploadHandler = multer({storage: storage}).single('file');
 
       let message = "Upload completed for ";
-      
+
       await uploadHandler(req, res, (err)=>{
         if (err) {
-          console.log(err);          
+          console.log(err);
         }
       });
 
@@ -124,7 +243,7 @@ class FilesService {
       /*
         message += req['file'].path;
         //console.log(message);
-        
+
         let fileInfo = {
           fieldname: req['file'].fieldname,
           originalname: req['file'].originalname,
@@ -134,8 +253,8 @@ class FilesService {
           destination: req['file'].destination,
           filename: req['file'].filename,
           path: req['file'].path
-        }        
-        // console.log(req['file']);          
+        }
+        // console.log(req['file']);
         const result = {
           message: message,
           data: fileInfo
@@ -144,7 +263,7 @@ class FilesService {
         return result;
       });
       */
-      
+
       const result = {
         message: message,
         data: {}
@@ -159,9 +278,9 @@ class FilesService {
         message: error.message || '',
         data: error.data || {}
       };
-      return res.status(500).json(response);		
+      return res.status(500).json(response);
     }
-      
+
   }
 
 }

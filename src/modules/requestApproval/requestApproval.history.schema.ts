@@ -4,17 +4,17 @@ var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
 // Schema
-var GkClientHistorySchema = new Schema ({
+var RequestApprovalHistorySchema = new Schema ({
   docId: String,
-  username: String,  
+  username: String,
   multi: Boolean,
-  tcode: String,  
-  diff: [], 
+  tcode: String,
+  diff: [],
   created_at: Date,
-}, { collection: 'clientsHistory' });
+}, { collection: 'requestApprovalHistory' });
 
 //IMPORTANT: Can not use arrow function here to ensure rebindable
-GkClientHistorySchema.pre('save', function (next) {
+RequestApprovalHistorySchema.pre('save', function (next) {
   let currentDate = new Date();
   if (!this.created_at) {
     this.created_at = currentDate;
@@ -22,8 +22,8 @@ GkClientHistorySchema.pre('save', function (next) {
   next();
 });
 
-GkClientHistorySchema.plugin(mongoosePaginate);
-GkClientHistorySchema.index({'$**': 'text'});
+RequestApprovalHistorySchema.plugin(mongoosePaginate);
+RequestApprovalHistorySchema.index({'$**': 'text'});
 /*
 GkClientSchema.index({
   name: 'text',
@@ -32,4 +32,4 @@ GkClientSchema.index({
   status2: 'text'
 });
 */
-module.exports = GkClientHistorySchema;
+module.exports = RequestApprovalHistorySchema;

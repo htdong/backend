@@ -4,7 +4,7 @@ var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
 // Schema
-var GkClientSchema = new Schema ({
+var GkClientRequestSchema = new Schema ({
   name: {
     type: String,
     required: true,
@@ -28,10 +28,10 @@ var GkClientSchema = new Schema ({
   status2: { type: String },
   created_at: Date,
   updated_at: Date,
-}, { collection: 'clients' });
+}, { collection: 'client_requests' });
 
 //IMPORTANT: Can not use arrow function here to ensure rebindable
-GkClientSchema.pre('save', function (next) {
+GkClientRequestSchema.pre('save', function (next) {
   let currentDate = new Date();
   this.updated_at = currentDate;
   if (!this.created_at) {
@@ -40,8 +40,8 @@ GkClientSchema.pre('save', function (next) {
   next();
 });
 
-GkClientSchema.plugin(mongoosePaginate);
-GkClientSchema.index({'$**': 'text'});
+GkClientRequestSchema.plugin(mongoosePaginate);
+GkClientRequestSchema.index({'$**': 'text'});
 /*
 GkClientSchema.index({
   name: 'text',
@@ -50,4 +50,4 @@ GkClientSchema.index({
   status2: 'text'
 });
 */
-module.exports = GkClientSchema;
+module.exports = GkClientRequestSchema;

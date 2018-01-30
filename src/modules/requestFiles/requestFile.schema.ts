@@ -4,34 +4,39 @@ var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
 // Schema
-var GkClientSchema = new Schema ({
-  name: {
+var RequestFileSchema = new Schema ({
+  docId: {
+    type: String,
+    required: true
+  },
+  originalname: {
+    type: String,
+    required: true
+  },
+  uploadedname: {
+    type: String,
+    required: true
+  },
+  desc: {
     type: String,
     required: true,
-    minlength: 5
   },
-  addresses: [],
-  contacts: [],
-  clientDb: {
+  size: {
+    type: Number
+  },
+  encoding: String,
+  mimetype: String,
+  username: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
-  remarks: [],
-  solutions: [
-    {
-      type: String,
-      ref: 'solutions'
-    }
-  ],
-  status1: { type: String },
-  status2: { type: String },
+  status: { type: String },
   created_at: Date,
   updated_at: Date,
-}, { collection: 'clients' });
+}, { collection: 'uploadFiles' });
 
 //IMPORTANT: Can not use arrow function here to ensure rebindable
-GkClientSchema.pre('save', function (next) {
+RequestFileSchema.pre('save', function (next) {
   let currentDate = new Date();
   this.updated_at = currentDate;
   if (!this.created_at) {
@@ -40,8 +45,8 @@ GkClientSchema.pre('save', function (next) {
   next();
 });
 
-GkClientSchema.plugin(mongoosePaginate);
-GkClientSchema.index({'$**': 'text'});
+RequestFileSchema.plugin(mongoosePaginate);
+RequestFileSchema.index({'$**': 'text'});
 /*
 GkClientSchema.index({
   name: 'text',
@@ -50,4 +55,4 @@ GkClientSchema.index({
   status2: 'text'
 });
 */
-module.exports = GkClientSchema;
+module.exports = RequestFileSchema;

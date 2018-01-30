@@ -10,9 +10,9 @@ import * as logger from 'morgan';
 
 // Internal packages
 var ConstantsBase = require('./constants.base');
-//var DB = require('../../services/dbConnection.service');
 var RoutesBase = require('./routes.base');
-import  { SimpleHash } from '../../services/simpleHash.service';
+//var DB = require('../../services/dbConnection.service');
+// import  { SimpleHash } from '../../services/simpleHash.service';
 
 class MiddlewaresBase {
 
@@ -23,6 +23,15 @@ class MiddlewaresBase {
 
     app.use(helmet());
     app.use(cors({ credentials: true }));
+
+    // app.use(function(req, res, next) { //allow cross origin requests
+    //     res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
+    //     res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+    //     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    //     res.header("Access-Control-Allow-Credentials", 'true');
+    //     next();
+    // });
+
     app.use(logger('dev'));
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
@@ -36,6 +45,7 @@ class MiddlewaresBase {
         '/users/register',
         '/users/forgot',
       ];
+      // '/requestFiles/upload'
       //console.log(unlessArray.indexOf(req.path));
 
       const urls = req.path.split("/");
@@ -62,7 +72,7 @@ class MiddlewaresBase {
      */
 
     app.use((req, res, next) => {
-      let simpleHash = new SimpleHash();
+      // let simpleHash = new SimpleHash();
       let urls = req.path.split("/");
       console.log(`
 --------------------------------

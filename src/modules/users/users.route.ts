@@ -5,6 +5,8 @@ var UsersController = require('./users.controller');
 
 var router = express.Router();
 
+router.get("/apiListPagination", UsersController.findAPIListPagination);
+
 router.post("/authenticate", UsersController.authenticate);
 router.post("/register", UsersController.register);
 router.post("/forgot", UsersController.forgot);

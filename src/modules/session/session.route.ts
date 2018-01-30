@@ -4,10 +4,10 @@ console.log('   /...Loading [SessionRoutes]');
 var express = require("express");
 
 // Internal
-var SessioController = require('./session.controller');
+var SessionController = require('./session.controller');
 var router = express.Router();
 
 // Routes
-router.put("/", SessioController.update);
+router.put("/", SessionController.update);
 
 module.exports = router;

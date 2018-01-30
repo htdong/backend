@@ -1,5 +1,6 @@
 // External
 var mongoose = require("mongoose");
+var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
 // Schema
@@ -19,6 +20,11 @@ var UserSchema = new Schema ({
   updated_at: Date,
 }, { collection: 'users' });
 
+// Can not query directly but can call case by case
+UserSchema.virtual('fullname').get(function () {
+  return this.firstname + ' ' + this.lastname;
+});
+
 UserSchema.pre('save', (next) => {
   let currentDate = new Date();
   this.updated_at = currentDate;
@@ -27,5 +33,8 @@ UserSchema.pre('save', (next) => {
   }
   next();
 });
+
+UserSchema.plugin(mongoosePaginate);
+UserSchema.index({'$**': 'text'});
 
 module.exports = UserSchema;
