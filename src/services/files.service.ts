@@ -16,6 +16,18 @@ class FilesService {
     console.log(rootPath);
   }
 
+  /**
+  * @function upload
+  * Upload a file to server into right clientId/upload folder for further processing
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {promise}
+  * - reject
+  * - resolve
+  */
+
   upload(req: express.Request, res: express.Response) {
 
     return new Promise((resolve, reject) => {
@@ -130,6 +142,18 @@ class FilesService {
 
   }
 
+  /**
+  * @function downloadCSV
+  * Create CSV file based on source and create a tempo link for client download
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  * @param {csv} csvData
+  *
+  * @return {object} {filename: http://server/repo/download/filename.csv}
+  * - 500
+  */
+
   async downloadCSV(req, res, csvData) {
     try {
       const userFilename = req.query.filename || 'download'
@@ -157,7 +181,6 @@ class FilesService {
       }
       return response.serverError(res, result);
     }
-
   }
 
   downloadRequestFile(req, res, requestFile) {

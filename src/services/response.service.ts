@@ -25,16 +25,19 @@
  * 			304: Not modified
  ************************************************************************************/
 
+import { HelperService } from './helper.service';
+
 /************************************************************************************
  * OK
  * @function ok					200 - Status, Data | (GET)
  * @function ok_pagination		200 - Status, Data, Total | For pagination purpose only (GET)
  * @function ok_message			200 - Status, Data, Total | Partial fulfilment (POST, PATCH, DELETE)
  * @function ok_created			201 - Status, Data | (POST)
- ************************************************************************************/ 
+ ************************************************************************************/
 
 module.exports.ok = function (res, result) {
-	console.log('Response 200: ', result);
+	console.log('RESPONSE 200:');
+	HelperService.log(result);
 	var response = {
 		data: result.data || {},
 	};
@@ -42,7 +45,8 @@ module.exports.ok = function (res, result) {
 };
 
 module.exports.ok_pagination = function (res, result) {
-	console.log('Response 200: ', result);
+	console.log('RESPONSE 200:');
+	HelperService.log(result);
 	var response = {
 	  data: result.data || {},
 	  total: result.total || 0
@@ -51,7 +55,8 @@ module.exports.ok_pagination = function (res, result) {
 };
 
 module.exports.ok_message = function (res, result) {
-	console.log('Response 200: ', result);
+	console.log('RESPONSE 200:');
+	HelperService.log(result);
 	var response = {
 		message: result.message || '',
 		data: result.data || {}
@@ -60,7 +65,8 @@ module.exports.ok_message = function (res, result) {
 };
 
 module.exports.ok_created = function (res, result) {
-	console.log('Response 201: ', result);
+	console.log('RESPONSE 201:');
+	HelperService.log(result);
 	var response = {
 		data: result.data || {}
 	};
@@ -78,7 +84,8 @@ module.exports.ok_created = function (res, result) {
  ************************************************************************************/
 
  module.exports.fail_badRequest = function (res, result) {
-	console.log('Response 400: ', result);
+	console.log('RESPONSE 400:');
+	HelperService.log(result);
 	var response = {
 		message: result.message || '',
 	};
@@ -86,22 +93,23 @@ module.exports.ok_created = function (res, result) {
 };
 
 module.exports.fail_unauthorized = function (res) {
-	console.log('Response 401');
+	console.log('RESPONSE 401');
 	return res.status(401).send();
 };
 
 module.exports.fail_forbidden = function (res) {
-	console.log('Response 403');
+	console.log('RESPONSE 403');
 	return res.status(403).send();
 };
 
 module.exports.fail_notFound = function (res) {
-	console.log('Response 404');
+	console.log('RESPONSE 404');
 	return res.status(404).send();
 };
 
 module.exports.fail_preCondition = function (res, result) {
-	console.log('Response 412: ', result);
+	console.log('RESPONSE 412:');
+	HelperService.log(result);
 	var response = {
 		message: result.message || '',
 		data: result.data || {}
@@ -110,7 +118,8 @@ module.exports.fail_preCondition = function (res, result) {
 };
 
 module.exports.fail_serverError = function (res, result) {
-	console.log('Response 500: ', result);
+	console.log('RESPONSE 500:');
+	HelperService.log(result);
 	var response = {
 		message: result.message || '',
 		data: result.data || {}
@@ -126,7 +135,7 @@ module.exports.fail_serverError = function (res, result) {
  * 										206 - Status, Message, Data
  * 										304 - Status
  * 										412 - tatus, Message, Data
- * 
+ *
  ************************************************************************************/
 
 module.exports.handle_createOrSave = function(res, error) {
@@ -187,9 +196,35 @@ module.exports.handle_upsert = function(res, result) {
 	}
 };
 
+module.exports.handle_server_error = function(res, error) {
+	const response = {
+		message: error['message'] || '',
+		data: error['data'] || []
+	}
+	console.log('RESPONSE 500:');
+	HelperService.log(response);
+	return res.status(500).json(response);
+}
 
+module.exports.handle_failed_precondition = function(res, validatedResult) {
+	const response = {
+		message: 'Data failed validation process',
+		data: {
+			"n": validatedResult['error'].length + validatedResult['data'].length,
+			"nModified": 0,
+			"nErrors": validatedResult['error'].length,
+			"errorDetails": JSON.stringify(validatedResult['error']),
+		}
+	}
+
+	console.log('RESPONSE 412:');
+	HelperService.log(response);
+	return res.status(412).json(response);
+}
+
+// --- DEPRECATED
 module.exports.badRequest = function (res, result) {
-	console.log(result);
+	HelperService.log(result);
 	var response = {
 		code: 400,
 		message: result.message || '',
@@ -199,7 +234,7 @@ module.exports.badRequest = function (res, result) {
 };
 
 module.exports.unauthorized = function (res, result) {
-	console.log(result);
+	HelperService.log(result);
 	var response = {
 		code: 401,
 		message: result.message || '',
@@ -209,7 +244,7 @@ module.exports.unauthorized = function (res, result) {
 };
 
 module.exports.forbidden = function (res, result) {
-	console.log(result);
+	HelperService.log(result);
 	var response = {
 		code: 403,
 		message: result.message || '',
@@ -219,7 +254,7 @@ module.exports.forbidden = function (res, result) {
 };
 
 module.exports.notFound = function (res, result) {
-	console.log(result);
+	HelperService.log(result);
 	var response = {
 		code: 404,
 		message: result.message || '',
@@ -229,7 +264,7 @@ module.exports.notFound = function (res, result) {
 };
 
 module.exports.preconditionFailed = function (res, result) {
-	console.log(result);
+	HelperService.log(result);
 	var response = {
 		code: 412,
 		message: result.message || '',
@@ -239,7 +274,7 @@ module.exports.preconditionFailed = function (res, result) {
 };
 
 module.exports.serverError = function (res, result) {
-	console.log(result);
+	HelperService.log(result);
 	var response = {
 		code: result.code || 500,
 		message: result.message || '',
@@ -249,7 +284,7 @@ module.exports.serverError = function (res, result) {
 };
 
 module.exports.createOrSaveFailed = function(res, error) {
-	console.log(error);
+	HelperService.log(error);
 	if (error.message.indexOf('duplicate key error') !== -1) {
 	  const response = {
 		code: 412,

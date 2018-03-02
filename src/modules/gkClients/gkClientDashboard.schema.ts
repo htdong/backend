@@ -4,36 +4,21 @@ var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
 // Schema
-var GkClientSchema = new Schema ({
+var GkClientDashboardSchema = new Schema ({
   name: {
     type: String,
     required: true,
     minlength: 5
   },
-  clientDb: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  industry: String,
-  service: String,
-  addresses: [],
-  contacts: [],
-  solutions: [
-    {
-      type: String,
-      ref: 'solutions'
-    }
-  ],
   remarks: [],
   status1: { type: String },
   status2: { type: String },
   created_at: Date,
   updated_at: Date,
-}, { collection: 'clients' });
+}, { collection: 'clients_dashboard' });
 
 //IMPORTANT: Can not use arrow function here to ensure rebindable
-GkClientSchema.pre('save', function (next) {
+GkClientDashboardSchema.pre('save', function (next) {
   let currentDate = new Date();
   this.updated_at = currentDate;
   if (!this.created_at) {
@@ -42,8 +27,8 @@ GkClientSchema.pre('save', function (next) {
   next();
 });
 
-GkClientSchema.plugin(mongoosePaginate);
-GkClientSchema.index({'$**': 'text'});
+GkClientDashboardSchema.plugin(mongoosePaginate);
+GkClientDashboardSchema.index({'$**': 'text'});
 /*
 GkClientSchema.index({
   name: 'text',
@@ -52,4 +37,4 @@ GkClientSchema.index({
   status2: 'text'
 });
 */
-module.exports = GkClientSchema;
+module.exports = GkClientDashboardSchema;

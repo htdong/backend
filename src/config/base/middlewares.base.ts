@@ -8,6 +8,8 @@ import * as expressJwt from 'express-jwt';
 import * as bodyParser from 'body-parser';
 import * as logger from 'morgan';
 
+var compression = require('compression')
+
 // Internal packages
 var ConstantsBase = require('./constants.base');
 var RoutesBase = require('./routes.base');
@@ -22,8 +24,9 @@ class MiddlewaresBase {
     var sessionController = require('../../modules/session/session.controller');
 
     app.use(helmet());
-    app.use(cors({ credentials: true }));
+    app.use(compression());
 
+    app.use(cors({ credentials: true }));
     // app.use(function(req, res, next) { //allow cross origin requests
     //     res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
     //     res.header("Access-Control-Allow-Origin", "http://localhost:3000");
@@ -44,6 +47,8 @@ class MiddlewaresBase {
         '/users/authenticate',
         '/users/register',
         '/users/forgot',
+        '/graphql',
+        'graphiql'
       ];
       // '/requestFiles/upload'
       //console.log(unlessArray.indexOf(req.path));
