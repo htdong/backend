@@ -9,25 +9,48 @@ var router = express.Router();
 
 // Routes
 // IMPORTANT: Routes sequence is important as /:id could cover other get /xxx thus put at last
-router.get("/masterListPagination", GkRequestsController.findMasterListPagination);
-router.get("/viewChange/:_id", GkRequestsController.viewChangeById);
-router.get("/history", GkRequestsController.history);
-router.get("/api/masterList", GkRequestsController.apiMasterList);
-router.get("/api/lzMasterList", GkRequestsController.apiLazyMasterList);
-router.get("/:_id", GkRequestsController.findById);
 
-router.post("/createNew", GkRequestsController.createNew);
+// REQUEST - OPERATIONS
+// Individial - CRUD
+router.post("/entry", GkRequestsController.module11);
 // router.post("/createChange", GkRequestsController.createChange);
+router.get("/:_id", GkRequestsController.module12);
+router.put("/:_id", GkRequestsController.module13);
+router.get("/:_id/changes", GkRequestsController.module19);
 
-router.put("/submit/:_id", GkRequestsController.submit);
-router.put("/:_id", GkRequestsController.update);
-router.put("/generateApprovalFlow/:_id", GkRequestsController.generateApprovalFlow);
+// Collective - Master
+router.get("/", GkRequestsController.module1x);
 
-router.patch("/withdraw/:_id", GkRequestsController.withdraw);
-router.patch("/cancel/:_id", GkRequestsController.cancel);
-router.patch("/returnRequest/:_id", GkRequestsController.returnRequest);
-router.patch("/reject/:_id", GkRequestsController.reject);
-router.patch("/approve/:_id", GkRequestsController.approve);
-router.patch("/abort/:_id", GkRequestsController.abort);
+// Request Actions
+router.put("/:_id/submit", GkRequestsController.submitRequest);
+router.patch("/:_id/withdraw", GkRequestsController.withdrawRequest);
+router.patch("/:_id/cancel", GkRequestsController.cancelRequest);
+router.patch("/:_id/return", GkRequestsController.returnRequest);
+router.patch("/:_id/reject", GkRequestsController.rejectRequest);
+router.patch("/:_id/approve", GkRequestsController.approveRequest);
+router.patch("/:_id/abort", GkRequestsController.abortRequest);
+
+// Request Approval Flow
+router.put("/:_id/approval/generateApprovalFlow", GkRequestsController.generateApprovalFlow);
+
+// REQUEST - MANAGEMENT/ ACCOUNTING
+// Management Data: Master & Transaction Data
+router.patch("/:_id/post", GkRequestsController.postRequest);
+router.patch("/:_id/revert", GkRequestsController.revertRequest);
+
+// Accounting Data
+router.post("/:_id/journal/create", GkRequestsController.createRequestJournal);
+router.patch("/:_id/journal/post", GkRequestsController.postRequestJournal);
+router.patch("/:_id/journal/revert", GkRequestsController.revertRequestJournal);
+
+// REQUEST - ADMINISTRATION
+router.post("/:_id/approval", GkRequestsController.moveRequestApproval);
+router.post("/:_id/status", GkRequestsController.moveRequestStatus);
+
+// Form Control
+// router.get("/api/masterList", GkRequestsController.apiMasterList);
+// router.get("/api/lzMasterList", GkRequestsController.apiLazyMasterList);
+
+// router.get("/history", GkRequestsController.history);
 
 module.exports = router;

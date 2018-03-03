@@ -5,6 +5,8 @@ var json2csv = require('json2csv');
 var fastCSV = require('fast-csv');
 var deep = require('deep-diff').diff;
 
+import  { HelperService } from '../../services/helper.service';
+
 var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
@@ -20,151 +22,22 @@ var GkRequestHistorySchema = require('./gkRequest.history.schema');
 
 var StandardApprovers = require('../requestApproval/standardApprovers');
 
-/*****************************************************************************************
- * GKREQUEST CONTROLLER
- * @function getModel         Return a document model that is dynalically attachable to target database
- * @function getHistoryModel  Return a document history model that is dynalically attachable to target database
- * @function trackHistory     Track change history of document
- *
- * @function create
- * @function findMasterListPagination Find Master List Pagination to support Datatable lazy loading
- * @function findById         To retrieve data of one document from collection by valid Id
- * @function update           To update data of one document in collection
- * @function patch            To patch a particular field of one document in collection, supporting:
- * - @function disable
- * - @function enable
- * - @function mark
- * - @function unmark
- * @function delete           To delete permanently a document from collection
- * @function viewChangeById   To get all historical change of particular document by Id
- *
- * @function validateData     To validate uploaded data before mass processing
- * @function handleFailedPrecondition To standardize response of pre-condition failed
- * @function handlePassedValidation To standardize response of success
- * @function handleServerError Function to standardize response of server error
- * @function upload           To upload list of new document into collection
- * @function download         To download the list of document to client
- * @function upsert           To upload and insert list of new document into collection
- * @function patchCollective  To patch list of documents in collection, supporting:
- * - @function disableCollective
- * - @function enableCollective
- * - @function markCollective
- * - @function unmarkCollective
- * @function deleteCollective To delete permanently list of documents from collection
- * @function history          To get all historical changes in Collection
- *
- * @function apiMasterList
- *****************************************************************************************/
 var GkRequestsController = {
 
-  getModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('GkRequest', GkRequestSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      GkRequestsController.handleServerError(req, res, err);
-    }
-  },
-
-  getHistoryModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('GkRequestHistory', GkRequestHistorySchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      GkRequestsController.handleServerError(req, res, err);
-    }
-  },
-
   /**
-   * Track change history of document
-   *
-   * @param {express.Request} req: express.Request that contain mySession
-   * @param {express.Request} res: express.Response
-   * @param {} trackParams:        Paramaters for trackHistory process
-   * - @param {boolean} multi:        Multiple changes? True: Multiple changes; False: Individual change
-   * - @param {string} tcode:         The module and action corresponding to data change
-   * - @param {} oldData:             Data before changed
-   * - @param {} newData:             Data after changed
-   * @var {} history:              Historical changes of data tracked in History Collection
-   */
-  trackHistory: async (req, res, trackParams) => {
-    try {
-      // const systemDbUri = ConstantsBase.urlSystemDb;
-      // const systemDb = await mongoose.createConnection(
-      //   systemDbUri,
-      //   {
-      //     useMongoClient: true,
-      //     promiseLibrary: require("bluebird")
-      //   }
-      // );
-      // let GkRequestHistory = systemDb.model('GkRequestHistory', GkRequestHistorySchema);
-      let GkRequestHistory = await GkRequestsController.getHistoryModel(req, res);
-
-      let history;
-      if (!trackParams.multi) {
-        const id = trackParams.newData._id || trackParams.oldData._id;
-
-        delete trackParams.oldData._id;
-        delete trackParams.newData._id;
-        delete trackParams.oldData.created_at;
-        delete trackParams.newData.created_at;
-
-        const diff = deep(trackParams.oldData, trackParams.newData);
-        console.log(diff);
-
-        history = {
-          docId: id,
-          username: req['mySession']._id,
-          tcode: trackParams.tcode,
-          diff: diff
-        }
-      } else {
-        history = {
-          docId: '',
-          username: req['mySession']._id,
-          tcode: trackParams.tcode,
-          diff: [{
-            kind: 'U',
-            path: '',
-            lhs: '',
-            rhs: trackParams.newData
-          }]
-        }
-      }
-      console.log(history);
-
-      let gkRequestHistory = new GkRequestHistory(history);
-
-      return gkRequestHistory.save();
-    }
-    catch (err) {
-      console.log(err);
-    }
-  },
-
-  /*****************************************************************************************
-   * INDIVIDUAL PROCESSING
-   *****************************************************************************************/
-
-  createNew: async (req: express.Request, res: express.Response) => {
+  * @function module11
+  * Create new document for (request) collection
+  * Corresonding tcode = module + 11
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 201
+  * - 401
+  * - 500
+  */
+  module11: async (req: express.Request, res: express.Response) => {
     try {
       let requestHeader = req.body;
 
@@ -192,7 +65,7 @@ var GkRequestsController = {
         let gkRequest = new GkRequest(requestHeader);
         let createdRequest = await gkRequest.save();
 
-        // Save the first history
+        // TODO: Save the first history
 
         // Return reult
         const result = {
@@ -207,92 +80,21 @@ var GkRequestsController = {
     }
   },
 
-  findMasterListPagination: async (req: express.Request, res: express.Response) => {
-    try {
-      let GkRequest = await GkRequestsController.getModel(req, res);
-      let params = req.query;
-      console.log(params);
-      // console.log(req.headers.usr);
-      console.log();
-      const username = req['mySession'].username;
-      let query = {};
-
-      switch (params.tray) {
-        case 'inbox':
-          query = {
-            $and: [
-              {desc: {'$regex': params.filter, '$options' : 'i'}},
-              {'pic.username': username}
-            ]
-          };
-          break;
-
-        case 'outbox':
-          query = {
-            $and: [
-              {desc: {'$regex': params.filter, '$options' : 'i'}},
-              {approved: username}
-            ]
-          };
-          break;
-
-        case 'draft':
-          query = {
-            $and: [
-              {desc: {'$regex': params.filter, '$options' : 'i'}},
-              {owner: username},
-              {status: 'Draft'}
-            ]
-          };
-          break;
-
-        case 'inprogress':
-          query = {
-            $and: [
-              {desc: {'$regex': params.filter, '$options' : 'i'}},
-              {owner: username},
-              {status: { $in: ['In progress', 'P. Submit', 'P. Withdraw', 'P. Cancel', 'P. Abort']}}
-            ]
-          };
-          break;
-
-        case 'completed':
-          query = {
-            $and: [
-              {desc: {'$regex': params.filter, '$options' : 'i'}},
-              {owner: username},
-              {status: { $in: ['Cancelled', 'Rejected', 'Approved', 'Aborted', 'Posted'] }}
-            ]
-          };
-          break;
-
-        default:
-          return response.fail_preCondition(res, {});
-      }
-      console.log(query);
-
-
-      let options = {
-        select: '_id tcode desc status requestor owner step pic approved created_at updated_at',
-        sort: JSON.parse(params.sort),
-        lean: false,
-        offset: parseInt(params.first),
-        limit: parseInt(params.rows)
-      };
-
-      let clients = await GkRequest.paginate(query, options);
-      const result = {
-        data: clients.docs,
-        total: clients.total,
-      }
-      return response.ok_pagination(res, result);
-    }
-    catch (err) {
-      GkRequestsController.handleServerError(req, res, err);
-    }
-  },
-
-  findById: async (req: express.Request, res: express.Response) => {
+  /**
+  * @function module12
+  * Retrieve a document from (request) collection
+  * Corresonding tcode = module + 12
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 404 (Not Found)
+  * - 500
+  */
+  module12: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
         const result = {
@@ -303,7 +105,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let client = await GkRequest.findById(req.params._id);
-        console.log(client);
+        HelperService.log(client);
         if (!client) {
           return response.fail_notFound(res);
         } else {
@@ -317,11 +119,26 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      GkRequestsController.handleServerError(req, res, err);
+      return response.handle_server_error(res, err);
     }
   },
 
-  update: async (req: express.Request, res: express.Response) => {
+  /**
+  * @function module13
+  * Update a document in (request) collection
+  * Corresonding tcode = module + 13
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 401
+  * - 404 (Not Found)
+  * - 500
+  */
+  module13: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
         const result = { message: `${req.params._id} is invalid Id!`}
@@ -330,7 +147,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // console.log(gkRequest);
+        // HelperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -383,7 +200,183 @@ var GkRequestsController = {
     }
   },
 
-  submit: async (req: express.Request, res: express.Response) => {
+  /**
+  * @function module19
+  * View changes history of a document in (request) collection
+  * Corresonding tcode = module + 19
+  * LAZY FUNCTION
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 500
+  */
+  module19: async (req: express.Request, res: express.Response) => {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+        const result = {
+          message: `${req.params._id} is invalid Id!`,
+        }
+        return response.fail_badRequest(res, result);
+      } else {
+        let GkRequestHistory = await GkRequestsController.getHistoryModel(req, res);
+        let params = req.query;
+
+        let query = {
+          $and: [
+              {docId: {'$regex': req.params._id, '$options' : 'i'} },
+              // {multi: false } // TODO: or null to increase performance
+          ]
+        };
+
+        let options = {
+          select: 'created_at docId username tcode diff',
+          sort: { created_at: -1 },
+          lean: false,
+          offset: parseInt(params.first),
+          limit: parseInt(params.rows)
+        };
+
+        let history = await GkRequestHistory.paginate(query, options);
+        const result = {
+          data: history.docs,
+          total: history.total,
+        }
+        return response.ok_pagination(res, result);
+      }
+    }
+    catch (err) {
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * @function module1x
+  * List of document in (request) collection
+  * Corresonding tcode = module + 1x
+  * LAZY FUNCTION
+  *
+  * @param {express.Request} req
+  * - @param {string} filter
+  * - @param {object} sort
+  * - @param {number} first
+  * - @param {number} rows
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 500
+  */
+  module1x: async (req: express.Request, res: express.Response) => {
+    try {
+      let GkRequest = await GkRequestsController.getModel(req, res);
+      let params = req.query;
+      HelperService.log(params);
+      // HelperService.log(req.headers.usr);
+      const username = req['mySession'].username;
+      let query = {};
+
+      switch (params.tray) {
+        case 'inbox':
+          query = {
+            $and: [
+              {desc: {'$regex': params.filter, '$options' : 'i'}},
+              {'pic.username': username}
+            ]
+          };
+          break;
+
+        case 'outbox':
+          query = {
+            $and: [
+              {desc: {'$regex': params.filter, '$options' : 'i'}},
+              {approved: username}
+            ]
+          };
+          break;
+
+        case 'draft':
+          query = {
+            $and: [
+              {desc: {'$regex': params.filter, '$options' : 'i'}},
+              {owner: username},
+              {status: 'Draft'}
+            ]
+          };
+          break;
+
+        case 'inprogress':
+          query = {
+            $and: [
+              {desc: {'$regex': params.filter, '$options' : 'i'}},
+              {owner: username},
+              {status: { $in: ['In progress', 'P. Submit', 'P. Withdraw', 'P. Cancel', 'P. Abort']}}
+            ]
+          };
+          break;
+
+        case 'completed':
+          query = {
+            $and: [
+              {desc: {'$regex': params.filter, '$options' : 'i'}},
+              {owner: username},
+              {status: { $in: ['Cancelled', 'Rejected', 'Approved', 'Aborted', 'Posted'] }}
+            ]
+          };
+          break;
+
+        case 'module':
+          query = {
+            $and: [
+              {desc: {'$regex': params.filter, '$options' : 'i'}},
+              {owner: username},
+              {tcode: {'$regex': params.prefix, '$options' : 'i'}}
+            ]
+          };
+          break;
+
+        default:
+          return response.fail_preCondition(res, {});
+      }
+      HelperService.log(query);
+
+      // TODO: Return data that fit to TRAY only, for better performance
+      let options = {
+        select: '_id tcode desc status requestor owner step pic approved created_at updated_at',
+        sort: JSON.parse(params.sort),
+        lean: false,
+        offset: parseInt(params.first),
+        limit: parseInt(params.rows)
+      };
+
+      let clients = await GkRequest.paginate(query, options);
+      const result = {
+        data: clients.docs,
+        total: clients.total,
+      }
+      return response.ok_pagination(res, result);
+    }
+    catch (err) {
+      return response.handle_server_error(res, err);
+    }
+  },
+
+
+  /**
+  * REQUEST ACTIONS
+  * @function submitRequest
+  * @function withdrawRequest
+  * @function cancelRequest
+  * @function returnRequest
+  * @function rejectRequest
+  * @function approveRequest
+  * @function abortRequest
+  */
+
+  submitRequest: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
         const result = { message: `${req.params._id} is invalid Id!` }
@@ -392,7 +385,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // console.log(gkRequest);
+        // HelperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -445,7 +438,7 @@ var GkRequestsController = {
             gkRequest.remark = requestHeader.remark;
             gkRequest.requestor = requestHeader.requestor;
             gkRequest.owner = requestHeader.owner;
-            // console.log(gkRequest);
+            // HelperService.log(gkRequest);
             let updatedRequest = await gkRequest.save();
 
             if (updatedRequest) {
@@ -467,7 +460,7 @@ var GkRequestsController = {
     }
   },
 
-  withdraw: async (req: express.Request, res: express.Response) => {
+  withdrawRequest: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
         const result = { message: `${req.params._id} is invalid Id!` }
@@ -476,7 +469,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // console.log(gkRequest);
+        // HelperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -528,7 +521,7 @@ var GkRequestsController = {
     }
   },
 
-  cancel: async (req: express.Request, res: express.Response) => {
+  cancelRequest: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
         const result = { message: `${req.params._id} is invalid Id!` }
@@ -536,7 +529,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // console.log(gkRequest);
+        // HelperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -589,7 +582,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        console.log('585', gkRequest);
+        HelperService.log(gkRequest);
 
         const tcode = gkRequest.tcode;
 
@@ -710,7 +703,7 @@ var GkRequestsController = {
     }
   },
 
-  reject: async (req: express.Request, res: express.Response) => {
+  rejectRequest: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
         const result = { message: `${req.params._id} is invalid Id!` }
@@ -718,7 +711,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        console.log(gkRequest);
+        HelperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -756,7 +749,7 @@ var GkRequestsController = {
     }
   },
 
-  approve: async (req: express.Request, res: express.Response) => {
+  approveRequest: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
         const result = { message: `${req.params._id} is invalid Id!` }
@@ -765,7 +758,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        console.log(gkRequest);
+        HelperService.log(gkRequest);
 
         const tcode = gkRequest.tcode;
 
@@ -923,11 +916,7 @@ var GkRequestsController = {
     }
   },
 
-  isLastApprover(gkRequest) {
-    return ((gkRequest.next.length === 0) && (gkRequest.planned === gkRequest.pic.username));
-  },
-
-  abort: async (req: express.Request, res: express.Response) => {
+  abortRequest: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
         const result = { message: `${req.params._id} is invalid Id!` }
@@ -935,7 +924,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // console.log(gkRequest);
+        // HelperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -979,6 +968,156 @@ var GkRequestsController = {
     }
   },
 
+  /**
+  * @function postRequest
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 404 (Not Found)
+  * - 500
+  */
+  postRequest: async(req: express.Request, res: express.Response) => {
+    try {
+      return response.ok_pagination(res, {});
+    }
+    catch (err) {
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * @function revertRequest
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 404 (Not Found)
+  * - 500
+  */
+  revertRequest: async(req: express.Request, res: express.Response) => {
+    try {
+      return response.ok_pagination(res, {});
+    }
+    catch (err) {
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * @function createRequestJournal
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 404 (Not Found)
+  * - 500
+  */
+  createRequestJournal: async(req: express.Request, res: express.Response) => {
+    try {
+      return response.ok_pagination(res, {});
+    }
+    catch (err) {
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * @function postRequestJournal
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 404 (Not Found)
+  * - 500
+  */
+  postRequestJournal: async(req: express.Request, res: express.Response) => {
+    try {
+      return response.ok_pagination(res, {});
+    }
+    catch (err) {
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * @function revertRequestJournal
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 404 (Not Found)
+  * - 500
+  */
+  revertRequestJournal: async(req: express.Request, res: express.Response) => {
+    try {
+      return response.ok_pagination(res, {});
+    }
+    catch (err) {
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * @function moveRequestApproval
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 404 (Not Found)
+  * - 500
+  */
+  moveRequestApproval: async(req: express.Request, res: express.Response) => {
+    try {
+      return response.ok_pagination(res, {});
+    }
+    catch (err) {
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * @function moveRequestStatus
+  *
+  * @param {express.Request} req
+  * @param {express.Response} res
+  *
+  * @return {response}
+  * - 200
+  * - 400 (Invalid Id)
+  * - 404 (Not Found)
+  * - 500
+  */
+  moveRequestStatus: async(req: express.Request, res: express.Response) => {
+    try {
+      return response.ok_pagination(res, {});
+    }
+    catch (err) {
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * REQUEST APPROVAL FLOW
+  */
   generateApprovalFlow: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
@@ -988,7 +1127,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // console.log(gkRequest);
+        // HelperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -1022,17 +1161,17 @@ var GkRequestsController = {
           //   }
           // ]);
           // let arrayApproval = [standardApprovers.directManager.call(null)];
-          // console.log(arrayApproval);
+          // HelperService.log(arrayApproval);
           //
           // let data;
           // await Promise.all(arrayApproval).then((values) => {
-          //   console.log(values);
+          //   HelperService.log(values);
           //   data = values;
           // });
 
           // let requestApprovalFunction = await GkRequestsController.getAprrovalFunction(gkRequest.approval_type.items);
           // await Promise.all(requestApprovalFunction).then((values) => {
-          //   console.log(values);
+          //   HelperService.log(values);
           //   data = values;
           // });
 
@@ -1041,7 +1180,7 @@ var GkRequestsController = {
             let requestApprovalFunction = await GkRequestsController.getAprrovalFunction(gkRequest.approval_type.items);
             let requestApprovalFlow = [];
             await Promise.all(requestApprovalFunction).then((values) => {
-              console.log(values);
+              HelperService.log(values);
               requestApprovalFlow = GkRequestsController.concatArrayOfObjects(values);
             });
 
@@ -1133,10 +1272,158 @@ var GkRequestsController = {
       tmp = standardApprovers[approvalItems[i].fx];
       approvalFunction.push(tmp);
     }
-    // console.log(approvalFunction);
+    // HelperService.log(approvalFunction);
     return Promise.resolve(approvalFunction);
   },
 
+  /**
+  * MONGOOSE MODEL
+  * Return a document model that is dynalically attachable to target database
+  * @function getModel                  GkRequest (1-)
+  * @function getHistoryModel           GkRequestHistory (1-)
+  */
+
+  /**
+  * @function getModel
+  * To create a new mongoose model from GkRequest Schema/ Collection in systemDb
+  *
+  * @param {express.Request} req: express.Request that contain mySession
+  * @param {express.Request} res: express.Response for responding the request in case
+  *
+  * @return {Mongoose Model} gkRequest
+  */
+  getModel: async (req: express.Request, res: express.Response) => {
+    try {
+      const systemDbUri = ConstantsBase.urlSystemDb;
+      const systemDb = await mongoose.createConnection(
+        systemDbUri,
+        {
+          useMongoClient: true,
+          promiseLibrary: require("bluebird")
+        }
+      );
+      return systemDb.model('GkRequest', GkRequestSchema);
+    }
+    catch (err) {
+      err['data'] = 'Error in connecting server and create collection model!';
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * @function getHistoryModel
+  * To create a new mongoose model from GkRequestHistory Schema/ Collection in systemDb
+  *
+  * @param {express.Request} req: express.Request that contain mySession
+  * @param {express.Request} res: express.Response for responding the request in case
+  *
+  * @return {Mongoose Model} gkRequestHistory
+  */
+  getHistoryModel: async (req: express.Request, res: express.Response) => {
+    try {
+      const systemDbUri = ConstantsBase.urlSystemDb;
+      const systemDb = await mongoose.createConnection(
+        systemDbUri,
+        {
+          useMongoClient: true,
+          promiseLibrary: require("bluebird")
+        }
+      );
+      return systemDb.model('GkRequestHistory', GkRequestHistorySchema);
+    }
+    catch (err) {
+      err['data'] = 'Error in connecting server and create collection model!';
+      return response.handle_server_error(res, err);
+    }
+  },
+
+  /**
+  * SUPPORTING FUNCTIONS
+  * @function trackHistory
+  * @function isLastApprover
+  * @function concatArrayOfObjects
+  */
+
+  /**
+  * @function trackHistory
+  * Track changes history of document
+  *
+  * @param {express.Request} req: express.Request that contain mySession
+  * @param {express.Request} res: express.Response for responding the request in case
+  * @param {} trackParams:        Paramaters for trackHistory process
+  * - @param {boolean} multi:        Multiple changes? True: Multiple changes; False: Individual change
+  * - @param {string} tcode:         The module and action corresponding to data change
+  * - @param {any} oldData:          Data before changed
+  * - @param {any} newData:          Data after changed
+  * @var {} history:              Historical changes of data tracked in History Collection
+  * @return {GkRequestHistory}     Return the saved GkClientHistory document
+  */
+  trackHistory: async (req, res, trackParams) => {
+    try {
+      let GkRequestHistory = await GkRequestsController.getHistoryModel(req, res);
+      let history;
+
+      if (!trackParams.multi) {
+        const id = trackParams.newData._id || trackParams.oldData._id;
+
+        delete trackParams.oldData._id;
+        delete trackParams.newData._id;
+        delete trackParams.oldData.created_at;
+        delete trackParams.newData.created_at;
+
+        const diff = deep(trackParams.oldData, trackParams.newData);
+        HelperService.log(diff);
+
+        history = {
+          docId: id,
+          username: req['mySession']._id,
+          tcode: trackParams.tcode,
+          diff: diff
+        }
+      } else {
+        history = {
+          docId: '',
+          username: req['mySession']._id,
+          tcode: trackParams.tcode,
+          diff: [{
+            kind: 'U',
+            path: '',
+            lhs: '',
+            rhs: trackParams.newData
+          }]
+        }
+      }
+      HelperService.log(history);
+
+      let gkRequestHistory = new GkRequestHistory(history);
+
+      return gkRequestHistory.save();
+    }
+    catch (err) {
+      HelperService.log(err);
+    }
+  },
+
+  /**
+  * @function isLastApprover
+  * Check the Request to find if stage is at last approver
+  *
+  * @param {GkRequest} gkRequest
+  *
+  * @return {boolean}
+  */
+  isLastApprover: (gkRequest) => {
+    return ((gkRequest.next.length === 0) && (gkRequest.planned === gkRequest.pic.username));
+  },
+
+  /**
+  * @function concatArrayOfObjects
+  * Check the Request to find if stage is at last approver
+  *
+  * @param {} objectsArray
+  *
+  * @return {Array} approvalFlow
+  */
   concatArrayOfObjects: (objectsArray) => {
     let approvalFlow = [];
     const iCount = objectsArray.length;
@@ -1148,325 +1435,6 @@ var GkRequestsController = {
     }
     return approvalFlow;
   },
-
-  viewChangeById: async (req: express.Request, res: express.Response) => {
-    try {
-      if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
-        const result = {
-          message: `${req.params._id} is invalid Id!`,
-        }
-        return response.fail_badRequest(res, result);
-      } else {
-        let GkRequestHistory = await GkRequestsController.getHistoryModel(req, res);
-        let params = req.query;
-
-        let query = {
-          $and: [
-              {docId: {'$regex': req.params._id, '$options' : 'i'} },
-              // {multi: false } // TODO: or null to increase performance
-          ]
-        };
-
-        let options = {
-          select: 'created_at docId username tcode diff',
-          sort: { created_at: -1 },
-          lean: false,
-          offset: parseInt(params.first),
-          limit: parseInt(params.rows)
-        };
-
-        let history = await GkRequestHistory.paginate(query, options);
-        const result = {
-          data: history.docs,
-          total: history.total,
-        }
-        return response.ok_pagination(res, result);
-      }
-
-    }
-    catch (err) {
-      GkRequestsController.handleServerError(req, res, err);
-    }
-  },
-
-  /*****************************************************************************************
-   * COLLECTIVE PROCESSING
-   *****************************************************************************************/
-
-  /**
-   * Function to traverse the uploaded file and validate list of documents to check their eligibility without saving
-   * @param {string} action:  One in [upload, upsert] - precondition check full schema
-   * @return {} result:       ValidatedResult include:
-   * - @return uploadStatus:    Status of uploaded file
-   * - @return error:           Array of simplified error message
-   * - @return data:            Array of documents eligible for action
-   */
-  validateData: async(req: express.Request, res: express.Response, action) => {
-    try {
-      console.log('...[1]Upload file to server');
-      let fileService = new FilesService();
-      let uploadStatus = await fileService.upload(req, res);
-
-      console.log('...[2]Validate documents before creating/ updating Collection. Action = ' + action);
-      let GkRequest = await GkRequestsController.getModel(req, res);
-
-      let gkRequest;
-      let uploadFile = uploadStatus.data.path;
-      let uploadData = [];
-      let errArray = [];
-      let lineNumber = 0;
-      let validatedResult;
-
-      var stream = fs.createReadStream(uploadFile);
-
-      return new Promise((resolve, reject)=>{
-        switch (action) {
-          case 'upload':
-          case 'upsert':
-            fastCSV
-             .fromStream(stream, { headers : true })
-             .on("data", (data) => {
-
-              /**
-               * IMPORTANT:
-               * - Upload will generate new _id
-               * - Upsert keep old _id and only generate new _id for missing ones
-               */
-              if (action=='upload') {
-                data['_id'] = new mongoose.Types.ObjectId();
-              } else {
-                if (!mongoose.Types.ObjectId.isValid(data['_id'])) {
-                  data['_id'] = new mongoose.Types.ObjectId();
-                }
-              }
-              gkRequest = new GkRequest(data);
-
-              gkRequest.validate((error) => {
-                lineNumber = lineNumber + 1;
-                if (error) {
-                  errArray.push({
-                    line: lineNumber,
-                    error: error.errors[Object.keys(error.errors)[0]].message
-                  });
-                } else {
-                  uploadData.push(data);
-                }
-              });
-
-             })
-             .on("end", () => {
-               validatedResult = {
-                uploadStatus: uploadStatus,
-                error: errArray,
-                data: uploadData,
-               }
-               resolve(validatedResult)
-             });
-            break;
-
-          default: // No valid action
-            validatedResult = {
-              uploadStatus: uploadStatus,
-              error: [{ line: 0, error: 'No valid action is defined for validation' }],
-              data: [],
-            }
-            resolve(validatedResult)
-            break;
-          }
-
-      });
-
-    } catch(error) {
-      const result = {
-        uploadStatus: {},
-        error: [{ line: 0, error: error }],
-        data: [],
-      }
-      return Promise.resolve(result);
-    }
-  },
-
-  /**
-   * Function to standardize response of pre-condition failed
-   */
-  handleFailedPrecondition: async(req: express.Request, res: express.Response, validatedResult) => {
-    const result = {
-      message: 'Data failed validation process',
-      data: {
-        "n": validatedResult['error'].length + validatedResult['data'].length,
-        "nModified": 0,
-        "nErrors": validatedResult['error'].length,
-        "errorDetails": JSON.stringify(validatedResult['error']),
-      }
-    }
-    return response.fail_preCondition(res, result);
-  },
-
-  /**
-   * Function to standardize response of success
-   */
-  handlePassedValidation: async(req: express.Request, res: express.Response, tcode, validatedResult) => {
-    let GkRequest = await GkRequestsController.getModel(req, res);
-    let result;
-
-    return new Promise((resolve, reject)=>{
-
-      Promise
-        .all(validatedResult['data'].map(item => {
-          return GkRequest.create(item).catch(error => ({error}))
-        }))
-
-        .then(items => {
-          let errorArray = [];
-          let count = 0;
-
-          items.forEach(item => {
-            count = count + 1;
-            if (item['error']) {
-              errorArray.push({ line: count, error: `Error: ${item['error'].errmsg}` });
-            }
-          });
-
-          let message = `${(validatedResult['data'].length - errorArray.length)} / ${validatedResult['data'].length} items are processed!`;
-          let result = ({
-            message: message,
-            data: {
-              "n": validatedResult['data'].length,
-              "nModified": (validatedResult['data'].length - errorArray.length),
-              "nErrors": errorArray.length,
-              "errorDetails": errorArray,
-            },
-          });
-
-          if (validatedResult['data'].length - errorArray.length) {
-            const filename = validatedResult['uploadStatus'].data.path.split('/');
-            const trackParams = {
-              multi: true,
-              tcode: tcode,
-              oldData: {},
-              newData: filename[filename.length - 1]
-            }
-            let trackHistory = GkRequestsController.trackHistory(req, res, trackParams);
-          }
-          return response.handle_upsert(res, result);
-        });
-
-    });
-
-  },
-
-  /**
-   * Function to standardize response of server error
-   */
-  handleServerError: async(req: express.Request, res: express.Response, error) => {
-    const result = {
-      message: error['message'] || '',
-      data: error['data'] || []
-    }
-    return response.fail_serverError(res, result);
-  },
-
-  history: async (req: express.Request, res: express.Response) => {
-    try {
-        let GkRequestHistory = await GkRequestsController.getHistoryModel(req, res);
-        let params = req.query;
-
-        let query = {};
-
-        let options = {
-          select: 'created_at docId username tcode diff',
-          sort: { created_at: -1 },
-          lean: false,
-          offset: parseInt(params.first),
-          limit: parseInt(params.rows)
-        };
-
-        let history = await GkRequestHistory.paginate(query, options);
-        const result = {
-          data: history.docs,
-          total: history.total,
-        }
-        return response.ok_pagination(res, result);
-
-    }
-    catch (err) {
-      GkRequestsController.handleServerError(req, res, err);
-    }
-  },
-
-  /**
-   * API - Return the master list for other module using
-   */
-  apiMasterList: async(req: express.Request, res: express.Response) => {
-    try {
-      let GkRequest = await GkRequestsController.getModel(req, res);
-
-      let params = req.query;
-      console.log(params);
-
-      let query = {
-        $and: [
-          {name: {'$regex': params.filter, '$options' : 'i'}},
-          {status1: 'Active'}
-        ]
-      };
-
-      let options = {
-        select: '_id name status1 status2',
-        sort: { name: 1 },
-        lean: false,
-      };
-
-      let clients = await GkRequest.paginate(query, options);
-
-      const result = {
-        data: clients.docs,
-      }
-      return response.ok(res, result);
-
-    }
-    catch (err) {
-      GkRequestsController.handleServerError(req, res, err);
-    }
-  },
-
-  /**
-   * API - Return the master list for other module using via lazy
-   */
-  apiLazyMasterList: async(req: express.Request, res: express.Response) => {
-    try {
-      let GkRequest = await GkRequestsController.getModel(req, res);
-
-      let params = req.query;
-      console.log(params);
-
-      let query = {
-        $and: [
-          {name: {'$regex': params.filter, '$options' : 'i'}},
-          {status1: 'Active'}
-        ]
-      };
-
-      let options = {
-        select: '_id name status1 status2',
-        sort: { name: 1 },
-        lean: false,
-        offset: parseInt(params.first),
-        limit: parseInt(params.rows)
-      };
-
-      let clients = await GkRequest.paginate(query, options);
-      const result = {
-        data: clients.docs,
-        total: clients.total,
-      }
-      return response.ok_pagination(res, result);
-
-    }
-    catch (err) {
-      GkRequestsController.handleServerError(req, res, err);
-    }
-  }
 
 }; // End of module
 

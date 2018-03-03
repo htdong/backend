@@ -24,10 +24,6 @@ var DashboardItemsSchema = require('../dashboard/dashboardItem.schema');
 
 var GkClientsController = {
 
-  /*****************************************************************************
-   * INDIVIDUAL PROCESSING
-   *****************************************************************************/
-
   /**
   * @function module11
   * Create new document for (module) collection
@@ -388,6 +384,7 @@ var GkClientsController = {
         };
 
         let history = await GkClientHistory.paginate(query, options);
+        HelperService.log(history);
         const result = {
           data: history.docs,
           total: history.total,
@@ -1572,7 +1569,7 @@ var GkClientsController = {
           {status1: 'Active'},
           {status2: 'Unmark'}
         ]
-      };      
+      };
 
       let clients = await GkClient.find(query).select('_id name').sort({ name: 1 });
       const result = {
@@ -1601,6 +1598,15 @@ var GkClientsController = {
   * @function getPropertyModel          Property (External)
   */
 
+  /**
+  * @function getModel
+  * To create a new mongoose model from (module) Schema/ Collection in systemDb
+  *
+  * @param {express.Request} req: express.Request that contain mySession
+  * @param {express.Request} res: express.Response for responding the request in case
+  *
+  * @return {Mongoose Model} module
+  */
   getModel: async (req: express.Request, res: express.Response) => {
     try {
       const systemDbUri = ConstantsBase.urlSystemDb;
@@ -1613,11 +1619,18 @@ var GkClientsController = {
     catch (err) {
       err['data'] = 'Error in connecting server and create collection model!';
       return response.handle_server_error(res, err);
-      // Deprecated
-      // GkClientsController.handleServerError(req, res, err);
     }
   },
 
+  /**
+  * @function getHistoryModel
+  * To create a new mongoose model from (module) Schema/ Collection in systemDb
+  *
+  * @param {express.Request} req: express.Request that contain mySession
+  * @param {express.Request} res: express.Response for responding the request in case
+  *
+  * @return {Mongoose Model} moduleHistory
+  */
   getHistoryModel: async (req: express.Request, res: express.Response) => {
     try {
       const systemDbUri = ConstantsBase.urlSystemDb;
@@ -1633,6 +1646,15 @@ var GkClientsController = {
     }
   },
 
+  /**
+  * @function getRequestModel
+  * To create a new mongoose model from (module request) Schema/ Collection in systemDb
+  *
+  * @param {express.Request} req: express.Request that contain mySession
+  * @param {express.Request} res: express.Response for responding the request in case
+  *
+  * @return {Mongoose Model} moduleRequest
+  */
   getRequestModel: async (req: express.Request, res: express.Response) => {
     try {
       const systemDbUri = ConstantsBase.urlSystemDb;
@@ -1648,6 +1670,15 @@ var GkClientsController = {
     }
   },
 
+  /**
+  * @function getRequestJournalModel
+  * To create a new mongoose model from (module journal) Schema/ Collection in systemDb
+  *
+  * @param {express.Request} req: express.Request that contain mySession
+  * @param {express.Request} res: express.Response for responding the request in case
+  *
+  * @return {Mongoose Model} moduleJournal
+  */
   getRequestJournalModel: async (req: express.Request, res: express.Response) => {
     try {
       const systemDbUri = ConstantsBase.urlSystemDb;
@@ -1655,7 +1686,7 @@ var GkClientsController = {
         systemDbUri,
         { useMongoClient: true, promiseLibrary: require("bluebird") }
       );
-      // TODO: Replace GkClientRequestSchema by GkClientRequestJournalSchema
+      // TODO: Replace GkClientRequestSchema by GkClientJournalSchema
       return systemDb.model('GkClientRequestJournal', GkClientRequestSchema);
     }
     catch (err) {
@@ -1664,22 +1695,31 @@ var GkClientsController = {
     }
   },
 
-  getRequestHistoryModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird") }
-      );
-      // TODO: Replace GkClientRequestSchema by GkClientRequestHistorySchema
-      return systemDb.model('GkClientRequestHistory', GkClientRequestSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
-  },
+  // getRequestHistoryModel: async (req: express.Request, res: express.Response) => {
+  //   try {
+  //     const systemDbUri = ConstantsBase.urlSystemDb;
+  //     const systemDb = await mongoose.createConnection(
+  //       systemDbUri,
+  //       { useMongoClient: true, promiseLibrary: require("bluebird") }
+  //     );
+  //     // TODO: Replace GkClientRequestSchema by GkClientRequestHistorySchema
+  //     return systemDb.model('GkClientRequestHistory', GkClientRequestSchema);
+  //   }
+  //   catch (err) {
+  //     err['data'] = 'Error in connecting server and create collection model!';
+  //     return response.handle_server_error(res, err);
+  //   }
+  // },
 
+  /**
+  * @function getDashboardModel
+  * To create a new mongoose model from (module dashboard) Schema/ Collection in systemDb
+  *
+  * @param {express.Request} req: express.Request that contain mySession
+  * @param {express.Request} res: express.Response for responding the request in case
+  *
+  * @return {Mongoose Model} moduleDashboard
+  */
   getDashboardModel: async (req: express.Request, res: express.Response) => {
     try {
       const systemDbUri = ConstantsBase.urlSystemDb;
@@ -1695,6 +1735,15 @@ var GkClientsController = {
     }
   },
 
+  /**
+  * @function getReportModel
+  * To create a new mongoose model from (module report) Schema/ Collection in systemDb
+  *
+  * @param {express.Request} req: express.Request that contain mySession
+  * @param {express.Request} res: express.Response for responding the request in case
+  *
+  * @return {Mongoose Model} moduleReport
+  */
   getReportModel: async (req: express.Request, res: express.Response) => {
     try {
       const systemDbUri = ConstantsBase.urlSystemDb;
