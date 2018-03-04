@@ -1,0 +1,1347 @@
+// create: async (req: express.Request, res: express.Response) => {
+//   try {
+//     const tcode = 'gkcln11';
+//
+//     req.body.status1 = 'Active';
+//     req.body.status2 = 'Unmarked';
+//
+//     let GkClient = await GkClientsController.getModel(req, res);
+//     let gkClient = new GkClient(req.body);
+//
+//     let client = await gkClient.save();
+//
+//     const trackParams = {
+//       multi: false,
+//       tcode: tcode,
+//       oldData: {_id:''},
+//       newData: gkClient.toObject()
+//     }
+//     let trackHistory = GkClientsController.trackHistory(req, res, trackParams);
+//
+//     const result = {
+//       message: 'Creation completed!',
+//       data: {_id: client._id }
+//     }
+//     return response.ok_created(res, result);
+//   }
+//   catch (err) {
+//     return response.handle_createOrSave(res, err);
+//   }
+// },
+
+// findMasterListPagination: async (req: express.Request, res: express.Response) => {
+//   try {
+//     let GkClient = await GkClientsController.getModel(req, res);
+//     let params = req.query;
+//     console.log(params);
+//
+//     let query = {
+//       $or: [
+//         {name: {'$regex': params.filter, '$options' : 'i'}},
+//         {clientDb: {'$regex': params.filter, '$options' : 'i'}}
+//       ]
+//     };
+//
+//     let options = {
+//       select: '_id name clientDb status1 status2',
+//       sort: JSON.parse(params.sort),
+//       lean: false,
+//       offset: parseInt(params.first),
+//       limit: parseInt(params.rows)
+//     };
+//
+//     let clients = await GkClient.paginate(query, options);
+//     const result = {
+//       data: clients.docs,
+//       total: clients.total,
+//     }
+//     return response.ok_pagination(res, result);
+//   }
+//   catch (err) {
+//     return response.handle_server_error(res, err);
+//   }
+// },
+
+// findById: async (req: express.Request, res: express.Response) => {
+//   try {
+//     if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+//       const result = {
+//         message: `${req.params._id} is invalid Id!`,
+//       }
+//       return response.fail_badRequest(res, result);
+//
+//     } else {
+//       let GkClient = await GkClientsController.getModel(req, res);
+//       let client = await GkClient.findById(req.params._id);
+//       console.log(client);
+//       if (!client) {
+//         return response.fail_notFound(res);
+//       } else {
+//         const result = {
+//           message: '',
+//           data: client,
+//           total: 1
+//         }
+//         return response.ok(res, result);
+//       }
+//     }
+//   }
+//   catch (err) {
+//     return response.handle_server_error(res, err);
+//   }
+// },
+
+// update: async (req: express.Request, res: express.Response) => {
+//   try {
+//     const tcode = 'gkcln13';
+//
+//     if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+//       const result = {
+//         message: `${req.params._id} is invalid Id!`,
+//       }
+//       return response.fail_badRequest(res, result);
+//
+//     } else {
+//       let GkClient = await GkClientsController.getModel(req, res);
+//       let client = await GkClient.findById(req.params._id);
+//       console.log(client);
+//       if (!client) {
+//         return response.fail_notFound(res);
+//       } else {
+//         // console.log(req.body);
+//         const oldClient = JSON.stringify(client);
+//
+//         client.name = req.body.name;
+//         client.clientDb = req.body.clientDb;
+//         client.industry = req.body.industry;
+//         client.service = req.body.service;
+//         client.addresses = req.body.addresses;
+//         client.contacts = req.body.contacts;
+//
+//         let updatedClient = await client.save();
+//
+//         if (updatedClient) {
+//           const trackParams = {
+//             multi: false,
+//             tcode: tcode,
+//             oldData: JSON.parse(oldClient),
+//             newData: updatedClient.toObject()
+//           }
+//           let trackHistory = GkClientsController.trackHistory(req, res, trackParams);
+//
+//           const result = {
+//             data: updatedClient,
+//           }
+//           return response.ok(res, result);
+//         } else {
+//           throw new Error('Patch failed!');
+//         }
+//       }
+//     }
+//   }
+//   catch (err) {
+//     return response.handle_createOrSave(res, err);
+//   }
+// },
+
+// disable: (req: express.Request, res: express.Response) => {
+//   GkClientsController.patch(req, res, 'disable');
+// },
+//
+// enable: (req: express.Request, res: express.Response) => {
+//   GkClientsController.patch(req, res, 'enable');
+// },
+//
+// mark: (req: express.Request, res: express.Response) => {
+//   GkClientsController.patch(req, res, 'mark');
+// },
+//
+// unmark: (req: express.Request, res: express.Response) => {
+//   GkClientsController.patch(req, res, 'unmark');
+// },
+
+// delete: async(req: express.Request, res: express.Response) => {
+//   try {
+//     const tcode = 'gkcln18';
+//
+//     if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+//       const result = {
+//         message: `${req.params._id} is invalid Id!`,
+//       }
+//       return response.fail_badRequest(res, result);
+//
+//     } else {
+//       let GkClient = await GkClientsController.getModel(req, res);
+//       let client = await GkClient.findById(req.params._id);
+//       if (!client) {
+//         return response.fail_notFound(res);
+//       } else {
+//         if (client.status2 == 'Marked') {
+//           let removedClient = await client.remove();
+//           if (removedClient) {
+//             // console.log(removedClient);
+//             const trackParams = {
+//               multi: false,
+//               tcode: tcode,
+//               oldData: removedClient.toObject(),
+//               newData: {_id:''}
+//             }
+//             let trackHistory = GkClientsController.trackHistory(req, res, trackParams);
+//
+//             const result = {
+//               data: removedClient,
+//             }
+//             return response.ok(res, result);
+//           } else {
+//             throw new Error('Remove failed!');
+//           }
+//         } else {
+//           const result = {
+//             message: 'Only marked document could be deleted!',
+//             data: client,
+//           }
+//           return response.fail_preCondition(res, result);
+//         }
+//
+//       }
+//     }
+//   }
+//   catch (err) {
+//     return response.handle_server_error(res, err);
+//   }
+// },
+
+findDashboardPagination: async (req: express.Request, res: express.Response) => {
+  try {
+    let GkClientDashboard = await GkClientsController.getDashboardModel(req, res);
+    let params = req.query;
+    console.log(params);
+    // console.log(req['mySession'].username);
+
+    let query = {
+      $and: [
+        {name: {'$regex': params.filter, '$options' : 'i'}},
+        {
+          $or: [
+            {type: 'Public'},
+            {
+              $and: [
+                {type: 'Private'},
+                {creator: req['mySession'].username}
+              ]
+            },
+          ]
+        }
+      ]
+    };
+
+    let options = {
+      select: '_id name type creator status1 status2',
+      sort: JSON.parse(params.sort),
+      lean: false,
+      offset: parseInt(params.first),
+      limit: parseInt(params.rows)
+    };
+
+    let dashboard = await GkClientDashboard.paginate(query, options);
+    const result = {
+      data: dashboard.docs,
+      total: dashboard.total,
+    }
+    return response.ok_pagination(res, result);
+  }
+  catch (err) {
+    return response.handle_server_error(res, err);
+  }
+},
+
+// For GkClient Request
+findOrCreateRequestById: async (req: express.Request, res: express.Response) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+      const result = {
+        message: `${req.params._id} is invalid Id!`,
+      }
+      return response.fail_badRequest(res, result);
+
+    } else {
+      let GkClientRequest = await GkClientsController.getRequestModel(req, res);
+      let gkClientRequest = await GkClientRequest.findById(req.params._id);
+      console.log(gkClientRequest);
+      if (!gkClientRequest) {
+
+        const newGkClient = {
+          _id: req.params._id,
+          name: 'New GK Client',
+          addresses: [],
+          contacts: [],
+          clientDb: req.params._id,
+          remark: [],
+          industry: '',
+          status1: 'Active',
+          status2: 'Unmark'
+        }
+
+        console.log(newGkClient);
+
+        gkClientRequest = new GkClientRequest(newGkClient);
+
+        let createdClientRequest = await gkClientRequest.save();
+
+        const result = {
+          message: '',
+          data: createdClientRequest,
+          total: 1
+        }
+        return response.ok(res, result);
+
+      } else {
+        const result = {
+          message: '',
+          data: gkClientRequest,
+          total: 1
+        }
+        return response.ok(res, result);
+      }
+    }
+  }
+  catch (err) {
+    return response.handle_server_error(res, err);
+  }
+},
+
+// For GkClient Request
+updateRequest: async (req: express.Request, res: express.Response) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+      const result = { message: `${req.params._id} is invalid Id!` }
+      return response.fail_badRequest(res, result);
+    } else {
+      let GkClientRequest = await GkClientsController.getRequestModel(req, res);
+      let gkClientRequest = await GkClientRequest.findById(req.params._id);
+      console.log(gkClientRequest);
+      if (!gkClientRequest) {
+        return response.fail_notFound(res);
+      } else {
+        console.log(req.body);
+        // const oldClient = JSON.stringify(client);
+
+        gkClientRequest.name = req.body.name;
+        gkClientRequest.clientDb = req.body.clientDb;
+        gkClientRequest.addresses = req.body.addresses;
+        gkClientRequest.contacts = req.body.contacts;
+
+        let updatedGkClient = await gkClientRequest.save();
+
+        if (updatedGkClient) {
+
+          const result = {
+            data: updatedGkClient,
+          }
+          return response.ok(res, result);
+        } else {
+          throw new Error('Update request body failed!');
+        }
+      }
+    }
+  }
+  catch (err) {
+    return response.handle_createOrSave(res, err);
+  }
+},
+
+/**
+ * Function to standardize response of pre-condition failed
+ */
+handleFailedPrecondition: async(req: express.Request, res: express.Response, validatedResult) => {
+  const result = {
+    message: 'Data failed validation process',
+    data: {
+      "n": validatedResult['error'].length + validatedResult['data'].length,
+      "nModified": 0,
+      "nErrors": validatedResult['error'].length,
+      "errorDetails": JSON.stringify(validatedResult['error']),
+    }
+  }
+  return response.fail_preCondition(res, result);
+},
+
+/**
+ * Function to standardize response of server error
+ */
+handleServerError: async(req: express.Request, res: express.Response, error) => {
+  const result = {
+    message: error['message'] || '',
+    data: error['data'] || []
+  }
+  return response.fail_serverError(res, result);
+},
+
+/**
+ * Upload - To upload list of new document into collection
+ */
+upload: async(req: express.Request, res: express.Response) => {
+  try {
+    const tcode = 'gkcln21';
+
+    let validatedResult = await GkClientsController.validateData(req, res, 'upload');
+    console.log(validatedResult);
+
+    if (validatedResult['error'].length) {
+      console.log('With error!', validatedResult['error'].length);
+      return response.handle_failed_precondition(res, validatedResult);
+      // GkClientsController.handleFailedPrecondition(req, res, validatedResult);
+
+    } else {
+      console.log('No error!');
+      GkClientsController.processCollectionOfValidatedDocument(req, res, tcode, validatedResult);
+    }
+
+  }
+  catch(error) {
+    return response.handle_server_error(res, error);
+  }
+
+},
+
+/**
+ * Download -  Download the list of document to client
+ */
+download: async(req: express.Request, res: express.Response)=> {
+  try {
+    console.log('...[1]Process Database JSON to CSV');
+    // console.log(req.query);
+
+    // Follow order of schema to easily update change
+    let fields = [
+      '_id',
+      'name',
+      'clientDb',
+      'industry',
+      'service',
+      'addresses',
+      'contacts',
+      'solutions',
+      'remarks',
+      'status1',
+      'status2',
+      'created_at',
+      'updated_at'
+    ];
+
+    let GkClient = await GkClientsController.getModel(req, res);
+    let clients = await GkClient.find({});
+
+    let csv = json2csv({data: clients, fields: fields});
+    // console.log(csv);
+
+    // DIRECT DOWNLOAD VIA BLOB OR STREAM AT CLIENTSIDE
+    /*
+    res.set("Content-Disposition", "attachment; filename=gkClient.csv");
+    res.set("Content-Type", "application/octet-stream");
+    return res.send(csv);
+    */
+
+    // INDIRECT DOWNLOAD BY CREATING FILE AT SERVERSIDE FOR STATIC FILE SERVE
+    /*
+    const userfilename = req.query.filename || 'default';
+    const filename = userfilename + '.csv';
+    const path = '../repo/download/' + filename;
+    fs.writeFile(path, csv, function(err) {
+      if (err) throw err;
+      console.log('Send file address to client for downloading');
+      res.json({filename: filename});
+    });
+    */
+
+    console.log('...[2]Generate temporary file for download');
+    let fileService = new FilesService();
+    return fileService.downloadCSV(req, res, csv);
+
+  }
+  catch (error) {
+    error['data'] = "Download failed";
+    return response.handle_server_error(res, error);
+  }
+
+},
+
+/**
+ * Upsert - To upload and insert list of new document into collection
+ */
+upsert: async(req: express.Request, res: express.Response) => {
+  try {
+    const tcode = 'gkcln23';
+
+    let validatedResult = await GkClientsController.validateData(req, res, 'upsert');
+    console.log(validatedResult);
+
+    if (validatedResult['error'].length) {
+      console.log('With error!', validatedResult['error'].length);
+      return response.handle_failed_precondition(res, validatedResult);
+    } else {
+      console.log('No error!');
+      // return response.ok(res, {});
+      GkClientsController.processCollectionOfValidatedDocument(req, res, tcode, validatedResult);
+    }
+
+  }
+  catch(error) {
+    return response.handle_server_error(res, error);
+  }
+
+},
+
+disableCollective: (req: express.Request, res: express.Response) => {
+  GkClientsController.patchCollective(req, res, 'disable');
+},
+
+enableCollective: (req: express.Request, res: express.Response) => {
+  GkClientsController.patchCollective(req, res, 'enable');
+},
+
+markCollective: (req: express.Request, res: express.Response) => {
+  GkClientsController.patchCollective(req, res, 'mark');
+},
+
+unmarkCollective: (req: express.Request, res: express.Response) => {
+  GkClientsController.patchCollective(req, res, 'unmark');
+},
+
+/**
+ * Delete - To delete permanently list of documents from collection
+ */
+deleteCollective: async(req: express.Request, res: express.Response) => {
+  try {
+    const tcode = 'gkcln28';
+
+    console.log('...[1]Upload file to server');
+    let fileService = new FilesService();
+    let uploadStatus = await fileService.upload(req, res);
+
+    console.log('...[2]Remove items from Database');
+    let GkClient = await GkClientsController.getModel(req, res);
+
+    let uploadFile = uploadStatus.data.path;
+    let lineNumber = 0;
+    let uploadData = [];
+    let errArray = [];
+
+    var stream = fs.createReadStream(uploadFile);
+
+    fastCSV
+     .fromStream(stream, { headers : true })
+
+     .on("data", (data) => {
+        // Validate uploaded data
+        lineNumber = lineNumber + 1;
+        if (mongoose.Types.ObjectId.isValid(data['_id'])) {
+          uploadData.push(data['_id']);
+        } else {
+          errArray.push({
+            line: lineNumber,
+            error: data['_id']
+          });
+        }
+
+     })
+
+     .on("end", () => {
+        const validatedResult = {
+          uploadStatus: uploadStatus,
+          error: errArray,
+          data: uploadData,
+        }
+        console.log(validatedResult);
+
+        if (validatedResult['error'].length) {
+          return response.handle_failed_precondition(res, validatedResult);
+        } else {
+          // custom success handler
+          Promise.resolve()
+          .then(() => {
+            console.log(uploadData);
+
+            // IMPORTANT: Only "Marked" items to be removed
+            return GkClient.remove(
+              {
+                _id: { $in: uploadData},
+                status2: 'Marked'
+              }
+            );
+          })
+
+          .then(data => {
+            console.log(data.result.n);
+            let message = `${data.result.n} items removed!`;
+
+            let result = ({
+              data: {
+                message: message,
+                detail: data.result,
+              }
+            });
+
+            if (data.result.n) {
+              const filename = uploadStatus.data.path.split('/');
+              const trackParams = {
+                multi: true,
+                tcode: tcode,
+                oldData: {},
+                newData: filename[filename.length - 1]
+              }
+              let trackHistory = GkClientsController.trackHistory(req, res, trackParams);
+            }
+            return response.ok_pagination(res, result);
+
+          });
+
+        }
+
+     });
+
+  }
+  catch(error) {
+    return response.handle_server_error(res, error);
+  }
+
+},
+
+history: async (req: express.Request, res: express.Response) => {
+  try {
+      let GkClientHistory = await GkClientsController.getHistoryModel(req, res);
+      let params = req.query;
+
+      let query = {};
+
+      let options = {
+        select: 'created_at docId username tcode diff',
+        sort: { created_at: -1 },
+        lean: false,
+        offset: parseInt(params.first),
+        limit: parseInt(params.rows)
+      };
+
+      let history = await GkClientHistory.paginate(query, options);
+      const result = {
+        data: history.docs,
+        total: history.total,
+      }
+      return response.ok_pagination(res, result);
+
+  }
+  catch (err) {
+    return response.handle_server_error(res, err);
+  }
+},
+
+/* ------------------------------------------------------------------------
+ * MASTER DATA
+ * ------------------------------------------------------------------------ */
+
+// findMasterListPagination(filter: string, sort: string, first: number, rows: number, tray: string, prefix: string): Observable<any[]> {
+//   const pagination = {
+//     filter: filter,
+//     sort: sort,
+//     first: first,
+//     rows: rows,
+//     tray: tray,
+//     prefix: prefix
+//   };
+//
+//   const reqOptions = {
+//     params: pagination
+//   };
+//
+//   return this.httpClientService.get(this.suffixUrl + '/masterListPagination', reqOptions)
+//     .map((res) => {
+//       /* res {
+//        *  data: Request[],
+//        *  total: number
+//        * }
+//        */
+//       return res.body || {};
+//     });
+// }
+
+// createNew(gkrequest: any) {
+//   return this.httpClientService.post(this.suffixUrl + 'createNew', gkrequest)
+//     .map((res) => {
+//       return res.body.data || '';
+//     });
+// }
+
+// updateRequest(gkrequest: any) {
+//   return this.httpClientService.put(this.suffixUrl + gkrequest._id, gkrequest)
+//   .map((res) => {
+//     return res.body.data || {};
+//   });
+// }
+
+// findById(_id: string) {
+//   return this.httpClientService.get(this.suffixUrl + _id)
+//     .map((res) => {
+//       return res.body.data || {};
+//     });
+// }
+
+/*****************************************************************************************
+ * GKREQUEST CONTROLLER
+ * @function getModel         Return a document model that is dynalically attachable to target database
+ * @function getHistoryModel  Return a document history model that is dynalically attachable to target database
+ * @function trackHistory     Track change history of document
+ *
+ * @function create
+ * @function findMasterListPagination Find Master List Pagination to support Datatable lazy loading
+ * @function findById         To retrieve data of one document from collection by valid Id
+ * @function update           To update data of one document in collection
+ * @function patch            To patch a particular field of one document in collection, supporting:
+ * - @function disable
+ * - @function enable
+ * - @function mark
+ * - @function unmark
+ * @function delete           To delete permanently a document from collection
+ * @function viewChangeById   To get all historical change of particular document by Id
+ *
+ * @function validateData     To validate uploaded data before mass processing
+ * @function handleFailedPrecondition To standardize response of pre-condition failed
+ * @function handlePassedValidation To standardize response of success
+ * @function handleServerError Function to standardize response of server error
+ * @function upload           To upload list of new document into collection
+ * @function download         To download the list of document to client
+ * @function upsert           To upload and insert list of new document into collection
+ * @function patchCollective  To patch list of documents in collection, supporting:
+ * - @function disableCollective
+ * - @function enableCollective
+ * - @function markCollective
+ * - @function unmarkCollective
+ * @function deleteCollective To delete permanently list of documents from collection
+ * @function history          To get all historical changes in Collection
+ *
+ * @function apiMasterList
+ *****************************************************************************************/
+
+/*****************************************************************************************
+ * INDIVIDUAL PROCESSING
+ *****************************************************************************************/
+
+// createNew: async (req: express.Request, res: express.Response) => {
+//   try {
+//     let requestHeader = req.body;
+//
+//     // Preparing request data
+//     delete requestHeader._id;
+//     requestHeader.status = 'Draft';
+//
+//     requestHeader.owner = [req['mySession'].username];
+//     if (!requestHeader.owner.includes(requestHeader.requestor.username)) {
+//       requestHeader.owner.push(requestHeader.requestor.username);
+//     }
+//
+//     /**
+//      * SECURITY CHECK
+//      * - Logged user must have document tcode (req.body.tcode) in (req['mySession'].tcodes)
+//      * - Logged user (req['mySession'].username) must be in owner list (req.body.owner)
+//      *   User (req.body.owner) is used for test as (requestHeader) default will include logged user
+//      */
+//     if (!(security.hasTcode(req, req.body.tcode) && security.isOwner(req.body.owner, req))) {
+//       return response.fail_forbidden(res);
+//     }
+//     else {
+//       // Create new request document
+//       let GkRequest = await GkRequestsController.getModel(req, res);
+//       let gkRequest = new GkRequest(requestHeader);
+//       let createdRequest = await gkRequest.save();
+//
+//       // Save the first history
+//
+//       // Return reult
+//       const result = {
+//         message: 'Creation completed!',
+//         data: createdRequest._id
+//       }
+//       return response.ok_created(res, result);
+//     }
+//   }
+//   catch (err) {
+//     return response.handle_createOrSave(res, err);
+//   }
+// },
+
+// findMasterListPagination: async (req: express.Request, res: express.Response) => {
+//   try {
+//     let GkRequest = await GkRequestsController.getModel(req, res);
+//     let params = req.query;
+//     console.log(params);
+//     // console.log(req.headers.usr);
+//     console.log();
+//     const username = req['mySession'].username;
+//     let query = {};
+//
+//     switch (params.tray) {
+//       case 'inbox':
+//         query = {
+//           $and: [
+//             {desc: {'$regex': params.filter, '$options' : 'i'}},
+//             {'pic.username': username}
+//           ]
+//         };
+//         break;
+//
+//       case 'outbox':
+//         query = {
+//           $and: [
+//             {desc: {'$regex': params.filter, '$options' : 'i'}},
+//             {approved: username}
+//           ]
+//         };
+//         break;
+//
+//       case 'draft':
+//         query = {
+//           $and: [
+//             {desc: {'$regex': params.filter, '$options' : 'i'}},
+//             {owner: username},
+//             {status: 'Draft'}
+//           ]
+//         };
+//         break;
+//
+//       case 'inprogress':
+//         query = {
+//           $and: [
+//             {desc: {'$regex': params.filter, '$options' : 'i'}},
+//             {owner: username},
+//             {status: { $in: ['In progress', 'P. Submit', 'P. Withdraw', 'P. Cancel', 'P. Abort']}}
+//           ]
+//         };
+//         break;
+//
+//       case 'completed':
+//         query = {
+//           $and: [
+//             {desc: {'$regex': params.filter, '$options' : 'i'}},
+//             {owner: username},
+//             {status: { $in: ['Cancelled', 'Rejected', 'Approved', 'Aborted', 'Posted'] }}
+//           ]
+//         };
+//         break;
+//
+//       case 'module':
+//         query = {
+//           $and: [
+//             {desc: {'$regex': params.filter, '$options' : 'i'}},
+//             {owner: username},
+//             {tcode: {'$regex': params.prefix, '$options' : 'i'}}
+//           ]
+//         };
+//         break;
+//
+//       default:
+//         return response.fail_preCondition(res, {});
+//     }
+//     console.log(query);
+//
+//
+//     let options = {
+//       select: '_id tcode desc status requestor owner step pic approved created_at updated_at',
+//       sort: JSON.parse(params.sort),
+//       lean: false,
+//       offset: parseInt(params.first),
+//       limit: parseInt(params.rows)
+//     };
+//
+//     let clients = await GkRequest.paginate(query, options);
+//     const result = {
+//       data: clients.docs,
+//       total: clients.total,
+//     }
+//     return response.ok_pagination(res, result);
+//   }
+//   catch (err) {
+//     GkRequestsController.handleServerError(req, res, err);
+//   }
+// },
+
+// findById: async (req: express.Request, res: express.Response) => {
+//   try {
+//     if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+//       const result = {
+//         message: `${req.params._id} is invalid Id!`,
+//       }
+//       return response.fail_badRequest(res, result);
+//
+//     } else {
+//       let GkRequest = await GkRequestsController.getModel(req, res);
+//       let client = await GkRequest.findById(req.params._id);
+//       console.log(client);
+//       if (!client) {
+//         return response.fail_notFound(res);
+//       } else {
+//         const result = {
+//           message: '',
+//           data: client,
+//           total: 1
+//         }
+//         return response.ok(res, result);
+//       }
+//     }
+//   }
+//   catch (err) {
+//     GkRequestsController.handleServerError(req, res, err);
+//   }
+// },
+
+// update: async (req: express.Request, res: express.Response) => {
+//   try {
+//     if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+//       const result = { message: `${req.params._id} is invalid Id!`}
+//       return response.fail_badRequest(res, result);
+//     } else {
+//       // Retrieve document
+//       let GkRequest = await GkRequestsController.getModel(req, res);
+//       let gkRequest = await GkRequest.findById(req.params._id);
+//       // console.log(gkRequest);
+//
+//       if (!gkRequest) {
+//         return response.fail_notFound(res);
+//       } else {
+//         let requestHeader = req.body;
+//         // const oldRequest = JSON.stringify(gkRequest);
+//
+//         requestHeader.owner = [req['mySession'].username];
+//         if (!requestHeader.owner.includes(requestHeader.requestor.username)) {
+//           requestHeader.owner.push(requestHeader.requestor.username);
+//         }
+//
+//         /**
+//          * SECURITY CHECK
+//          * - Logged user must have document tcode (req.body.tcode) in (req['mySession'].tcodes)
+//          * - Logged user (req['mySession'].username) must be in owner list (req.body.owner)
+//          *   User (req.body.owner) is used for test as (requestHeader) default will include logged user
+//          */
+//         if (!(security.hasTcode(req, req.body.tcode) && security.isOwner(req.body.owner, req))) {
+//           return response.fail_forbidden(res);
+//         }
+//         else {
+//           // Update request document
+//           gkRequest.desc = requestHeader.desc;
+//           gkRequest.remark = requestHeader.remark;
+//           gkRequest.status = requestHeader.status;
+//           gkRequest.step = requestHeader.step;
+//           gkRequest.approval_type = requestHeader.approval_type;
+//           gkRequest.requestor = requestHeader.requestor;
+//           gkRequest.owner = requestHeader.owner;
+//
+//           let updatedRequest = await gkRequest.save();
+//
+//           if (updatedRequest) {
+//             // Save update history
+//
+//             const result = {
+//               data: updatedRequest,
+//             }
+//             return response.ok(res, result);
+//           } else {
+//             throw new Error('Patch failed!');
+//           }
+//         }
+//       }
+//     }
+//   }
+//   catch (err) {
+//     return response.handle_createOrSave(res, err);
+//   }
+// },
+
+/**
+* REQUEST ACTIONS
+*/
+
+/**
+ * API - Return the master list for other module using via lazy
+ */
+apiLazyMasterList: async(req: express.Request, res: express.Response) => {
+  try {
+    let GkRequest = await GkRequestsController.getModel(req, res);
+
+    let params = req.query;
+    console.log(params);
+
+    let query = {
+      $and: [
+        {name: {'$regex': params.filter, '$options' : 'i'}},
+        {status1: 'Active'}
+      ]
+    };
+
+    let options = {
+      select: '_id name status1 status2',
+      sort: { name: 1 },
+      lean: false,
+      offset: parseInt(params.first),
+      limit: parseInt(params.rows)
+    };
+
+    let clients = await GkRequest.paginate(query, options);
+    const result = {
+      data: clients.docs,
+      total: clients.total,
+    }
+    return response.ok_pagination(res, result);
+
+  }
+  catch (err) {
+    GkRequestsController.handleServerError(req, res, err);
+  }
+}
+
+/**
+ * API - Return the master list for other module using
+ */
+apiMasterList: async(req: express.Request, res: express.Response) => {
+  try {
+    let GkRequest = await GkRequestsController.getModel(req, res);
+
+    let params = req.query;
+    console.log(params);
+
+    let query = {
+      $and: [
+        {name: {'$regex': params.filter, '$options' : 'i'}},
+        {status1: 'Active'}
+      ]
+    };
+
+    let options = {
+      select: '_id name status1 status2',
+      sort: { name: 1 },
+      lean: false,
+    };
+
+    let clients = await GkRequest.paginate(query, options);
+
+    const result = {
+      data: clients.docs,
+    }
+    return response.ok(res, result);
+
+  }
+  catch (err) {
+    GkRequestsController.handleServerError(req, res, err);
+  }
+},
+
+history: async (req: express.Request, res: express.Response) => {
+  try {
+      let GkRequestHistory = await GkRequestsController.getHistoryModel(req, res);
+      let params = req.query;
+
+      let query = {};
+
+      let options = {
+        select: 'created_at docId username tcode diff',
+        sort: { created_at: -1 },
+        lean: false,
+        offset: parseInt(params.first),
+        limit: parseInt(params.rows)
+      };
+
+      let history = await GkRequestHistory.paginate(query, options);
+      const result = {
+        data: history.docs,
+        total: history.total,
+      }
+      return response.ok_pagination(res, result);
+
+  }
+  catch (err) {
+    GkRequestsController.handleServerError(req, res, err);
+  }
+},
+
+/*****************************************************************************************
+ * COLLECTIVE PROCESSING
+ *****************************************************************************************/
+
+/**
+ * Function to traverse the uploaded file and validate list of documents to check their eligibility without saving
+ * @param {string} action:  One in [upload, upsert] - precondition check full schema
+ * @return {} result:       ValidatedResult include:
+ * - @return uploadStatus:    Status of uploaded file
+ * - @return error:           Array of simplified error message
+ * - @return data:            Array of documents eligible for action
+ */
+validateData: async(req: express.Request, res: express.Response, action) => {
+  try {
+    console.log('...[1]Upload file to server');
+    let fileService = new FilesService();
+    let uploadStatus = await fileService.upload(req, res);
+
+    console.log('...[2]Validate documents before creating/ updating Collection. Action = ' + action);
+    let GkRequest = await GkRequestsController.getModel(req, res);
+
+    let gkRequest;
+    let uploadFile = uploadStatus.data.path;
+    let uploadData = [];
+    let errArray = [];
+    let lineNumber = 0;
+    let validatedResult;
+
+    var stream = fs.createReadStream(uploadFile);
+
+    return new Promise((resolve, reject)=>{
+      switch (action) {
+        case 'upload':
+        case 'upsert':
+          fastCSV
+           .fromStream(stream, { headers : true })
+           .on("data", (data) => {
+
+            /**
+             * IMPORTANT:
+             * - Upload will generate new _id
+             * - Upsert keep old _id and only generate new _id for missing ones
+             */
+            if (action=='upload') {
+              data['_id'] = new mongoose.Types.ObjectId();
+            } else {
+              if (!mongoose.Types.ObjectId.isValid(data['_id'])) {
+                data['_id'] = new mongoose.Types.ObjectId();
+              }
+            }
+            gkRequest = new GkRequest(data);
+
+            gkRequest.validate((error) => {
+              lineNumber = lineNumber + 1;
+              if (error) {
+                errArray.push({
+                  line: lineNumber,
+                  error: error.errors[Object.keys(error.errors)[0]].message
+                });
+              } else {
+                uploadData.push(data);
+              }
+            });
+
+           })
+           .on("end", () => {
+             validatedResult = {
+              uploadStatus: uploadStatus,
+              error: errArray,
+              data: uploadData,
+             }
+             resolve(validatedResult)
+           });
+          break;
+
+        default: // No valid action
+          validatedResult = {
+            uploadStatus: uploadStatus,
+            error: [{ line: 0, error: 'No valid action is defined for validation' }],
+            data: [],
+          }
+          resolve(validatedResult)
+          break;
+        }
+
+    });
+
+  } catch(error) {
+    const result = {
+      uploadStatus: {},
+      error: [{ line: 0, error: error }],
+      data: [],
+    }
+    return Promise.resolve(result);
+  }
+},
+
+/**
+ * Function to standardize response of pre-condition failed
+ */
+handleFailedPrecondition: async(req: express.Request, res: express.Response, validatedResult) => {
+  const result = {
+    message: 'Data failed validation process',
+    data: {
+      "n": validatedResult['error'].length + validatedResult['data'].length,
+      "nModified": 0,
+      "nErrors": validatedResult['error'].length,
+      "errorDetails": JSON.stringify(validatedResult['error']),
+    }
+  }
+  return response.fail_preCondition(res, result);
+},
+
+/**
+ * Function to standardize response of success
+ */
+handlePassedValidation: async(req: express.Request, res: express.Response, tcode, validatedResult) => {
+  let GkRequest = await GkRequestsController.getModel(req, res);
+  let result;
+
+  return new Promise((resolve, reject)=>{
+
+    Promise
+      .all(validatedResult['data'].map(item => {
+        return GkRequest.create(item).catch(error => ({error}))
+      }))
+
+      .then(items => {
+        let errorArray = [];
+        let count = 0;
+
+        items.forEach(item => {
+          count = count + 1;
+          if (item['error']) {
+            errorArray.push({ line: count, error: `Error: ${item['error'].errmsg}` });
+          }
+        });
+
+        let message = `${(validatedResult['data'].length - errorArray.length)} / ${validatedResult['data'].length} items are processed!`;
+        let result = ({
+          message: message,
+          data: {
+            "n": validatedResult['data'].length,
+            "nModified": (validatedResult['data'].length - errorArray.length),
+            "nErrors": errorArray.length,
+            "errorDetails": errorArray,
+          },
+        });
+
+        if (validatedResult['data'].length - errorArray.length) {
+          const filename = validatedResult['uploadStatus'].data.path.split('/');
+          const trackParams = {
+            multi: true,
+            tcode: tcode,
+            oldData: {},
+            newData: filename[filename.length - 1]
+          }
+          let trackHistory = GkRequestsController.trackHistory(req, res, trackParams);
+        }
+        return response.handle_upsert(res, result);
+      });
+
+  });
+
+},
+
+/**
+ * Function to standardize response of server error
+ */
+handleServerError: async(req: express.Request, res: express.Response, error) => {
+  const result = {
+    message: error['message'] || '',
+    data: error['data'] || []
+  }
+  return response.fail_serverError(res, result);
+},
+
+
+
+
+
+
+
+
+
+// saveRequestHeader() {
+//   // NEW -> DRAFT
+//   // if (!this.id) {
+//     // this.gkRequestService.createNew(this.myForm.value);
+//   // }
+//   // DRAFT -> DRAFT
+//   // else {
+//     // console.log(this.myForm.value);
+//     // this.gkRequestService.update(this.myForm.value);
+//   // }
+// }
+//
+// submitRequestHeader() {
+//   // DRAFT -> P. SUBMIT
+//   // DRAFT -> IN PROGRESS
+//   // if (this.id) {
+//     // this.gkRequestService.submit(this.myForm.value);
+//   // }
+// }
+
+// switch (action) {
+//   case 'save':
+//     if (this.myForm.controls['status'].value==='New'){
+//       this.saveRequestHeader();
+//     }
+//     // Else prioritize save requestBody first
+//     break;
+//
+//   case 'submit':
+//     // Prioritize save requestBody first
+//     break;
+//
+//   case 'withdraw':
+//     // IN PROGRESS -> P. WITHDRAW
+//     // IN PROGRESS -> DRAFT
+//     // if (this.id) {
+//     //   this.gkRequestService.withdraw(this.myForm.value._id);
+//     // }
+//     break;
+//
+//   case 'cancel':
+//     // IN PROGRESS -> P. CANCEL
+//     // IN PROGRESS -> CANCELLED
+//     // if (this.id) {
+//       // this.gkRequestService.cancel(this.myForm.value._id);
+//     // }
+//     break;
+//
+//   case 'return':
+//     // P. SUBMIT -> DRAFT
+//     // IN PROGRESS -> DRAFT
+//     // P. WITHDRAW -> IN PROGRESS
+//     // P. CANCEL -> IN PROGRESS
+//     // P. ABORT -> APPROVED
+//     // if (this.id) {
+//       // this.gkRequestService.returnRequest(this.myForm.value._id);
+//     // }
+//     break;
+//
+//   case 'reject':
+//     // IN PROGRESS -> REJECTED
+//     // if (this.id) {
+//       // this.gkRequestService.reject(this.myForm.value._id);
+//     // }
+//     break;
+//
+//   case 'approve':
+//     // P. SUBMIT -> IN PROGRESS
+//     // IN PROGRESS -> APPROVED
+//     // P. WITHDRAW -> DRAFT
+//     // P. CANCEL -> CANCELLED
+//     // P. ABORT -> ABORTED
+//     // if (this.id) {
+//       // this.gkRequestService.approve(this.myForm.value._id);
+//     // }
+//     break;
+//
+//   case 'abort':
+//     // APPROVED -> P. ABORT
+//     // this.gkRequestService.abort(this.myForm.value._id);
+//     break;
+//
+//   case 'post':
+//     // APPROVED -> POSTED
+//
+//     break;
+//
+//   case 'revert':
+//     // POSTED -> APPROVED
+//     break;
+//
+//   case 'copy':
+//     break;
+//
+//   case 'print':
+//     break;
+//
+//   default:
+//     break;
+// }

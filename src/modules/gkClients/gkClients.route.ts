@@ -71,16 +71,16 @@ router.get("/changes", GkClientsController.module29);
 
 // Request - Process
 router.get("/requests/:_id", GkClientsController.module32); // findOrUpsertBlankObjectOfRequest
-router.post("/requests/:_id", GkClientsController.module33); // saveObjectOfRequest
+router.put("/requests/:_id", GkClientsController.module33); // saveObjectOfRequest
 router.get("/requests/:_id/changes", GkClientsController.module39); // findOrUpsertBlankObjectOfRequest
 
 // Request - Master
 router.get("/requests", GkClientsController.module3x);
 
 // Request - MJE of Object supplement (Super User and Admin tasks)
-router.post("/requests/:_id/mje", GkClientsController.module41);
-router.post("/requests/:_id/post", GkClientsController.module42);
-router.post("/requests/:_id/revert", GkClientsController.module43);
+// router.post("/requests/:_id/mje", GkClientsController.module41);
+router.patch("/requests/:_id/post", GkClientsController.module42);
+router.patch("/requests/:_id/revert", GkClientsController.module43);
 // router.patch("/requests/:_id/approval", GkClientsController.module44);
 // router.patch("/requests/:_id/status", GkClientsController.module45);
 

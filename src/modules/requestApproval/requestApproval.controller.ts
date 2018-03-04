@@ -196,7 +196,11 @@ var RequestApprovalController = {
 
       } else {
         let RequestApproval = await RequestApprovalController.getModel(req, res);
-        let requestApproval = await RequestApproval.find({tcode: req.params._id});
+        let requestApproval = await RequestApproval.find({
+          tcode: req.params._id,
+          status1: 'Active',
+          status2: 'Unmarked'
+        }).select('_id desc items');
         console.log(requestApproval);
         if (!requestApproval) {
           return response.fail_notFound(res);
