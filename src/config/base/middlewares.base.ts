@@ -48,7 +48,8 @@ class MiddlewaresBase {
         '/users/register',
         '/users/forgot',
         '/graphql',
-        'graphiql'
+        'graphiql',
+        // '/repo/download/:id'
       ];
       // '/requestFiles/upload'
       //console.log(unlessArray.indexOf(req.path));

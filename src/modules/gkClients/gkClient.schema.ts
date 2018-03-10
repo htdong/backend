@@ -25,6 +25,9 @@ var GkClientSchema = new Schema ({
       ref: 'solutions'
     }
   ],
+  setting: {
+    maxUploadSize: Number
+  },
   remarks: [],
   status1: { type: String },
   status2: { type: String },

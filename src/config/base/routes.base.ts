@@ -12,6 +12,8 @@ const { graphqlExpress, graphiqlExpress } = require('apollo-server-express');
 import schema from '../../modules/apollo/schema';
 
 // Internal
+var NotificationsRoutes = require('../../modules/notification/notifications.route');
+var MessagesRoutes = require('../../modules/message/messages.route');
 var UsersRoutes = require('../../modules/users/users.route');
 var GkClientsRoutes = require('../../modules/gkClients/gkClients.route');
 var SessionRoutes = require('../../modules/session/session.route');
@@ -39,6 +41,8 @@ class RoutesBase {
     app.use('/', router);
 
     // API restful services
+    app.use("/notifications", NotificationsRoutes);
+    app.use("/messages", MessagesRoutes);
     app.use("/users", UsersRoutes);
     app.use("/gkClients", GkClientsRoutes);
     app.use("/gkRequests", GkRequestsRoutes);

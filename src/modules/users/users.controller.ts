@@ -8,6 +8,8 @@ var nodemailer = require('nodemailer');
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcryptjs';
 
+import  { HelperService } from '../../services/helper.service';
+
 var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
@@ -99,15 +101,17 @@ var UsersController = {
       else {
         let GkClient = await GkClientsController.getModel(req, res);
         let client = await GkClient.findById(req.body.token);
+        
+        HelperService.log(client);
 
-        console.log('Client', client);
         if (!client) {
           return response.fail_notFound(res);
         } else {
           let User = await UsersController.getModel(req, res, client['clientDb']);
           let users = await User.find({ username: req.body.username});
 
-          console.log('Users: ', users);
+          HelperService.log(users);
+
           if (users.length == 0) {
             return response.fail_notFound(res);
           }
@@ -141,10 +145,13 @@ var UsersController = {
                 awt:        awt,
                 wklge:      clientUser.defaultLge,
                 wkyear:     new Date().getFullYear().toString(),
-                tcodes:     encodedTcodes,
                 lges:       clientUser.lges,
-                status:     clientUser.status
+                status:     clientUser.status,
+                setting:    client.setting,
+                tcodes:     encodedTcodes
               }
+
+              HelperService.log(data);
 
               // session to be stored for later use at backend server
               req['mySession'] = {
@@ -154,6 +161,7 @@ var UsersController = {
                 clientDb: client.clientDb,
                 wklge:    clientUser.defaultLge,
                 wkyear:   new Date().getFullYear().toString(),
+                setting:  client.setting,
                 tcodes:   clientUser.tcodes.sort(),
               }
 

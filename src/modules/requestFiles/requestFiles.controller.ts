@@ -8,12 +8,16 @@ var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
+import  { HelperService } from '../../services/helper.service';
+
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
 var FilesService = require('../../services/files.service');
 
 var RequestFileSchema = require('./requestFile.schema');
 var RequestFileHistorySchema = require('./requestFile.history.schema');
+
+var notificationsController = require('../../modules/notification/notifications.controller');
 
 var RequestFilesController = {
 
@@ -153,7 +157,40 @@ var RequestFilesController = {
         } else {
           console.log('Generate temporary file for download');
           let fileService = new FilesService();
-          return fileService.downloadRequestFile(req, res, requestFiles);
+
+          let originalname = await fileService.downloadRequestDocument(req, res, requestFiles);
+
+          HelperService.log(req.body);
+
+          const notification = {
+            tcode: 'dl',
+            // dl = download
+            // req.body.tcode,
+            id: '',
+            icon: 'file_download',
+            desc: originalname + ' is ready for download!',
+            url: originalname,
+            data: {
+              icon: 'file_download',
+              desc: originalname + ' is ready for download!',
+              url: originalname
+            },
+            username: req['mySession']['username'],
+            creator: 'system',
+            isMark: true
+          }
+
+          HelperService.log(notification);
+
+          let a = await notificationsController.module11(req, res, notification);
+
+          const result = {
+            message: '',
+            data: notification
+          }
+          response.ok(res, result);
+
+
         }
       }
     }

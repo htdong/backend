@@ -9,6 +9,9 @@ var SessionSchema = new Schema ({
   wklge: { type: String },
   wkyear: { type: String },
   tcodes: [],
+  setting: {
+    maxUploadSize: Number
+  }
 });
 
 module.exports = SessionSchema;

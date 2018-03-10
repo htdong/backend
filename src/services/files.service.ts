@@ -4,10 +4,13 @@ var multer = require('multer');
 var fs = require("fs-extra");
 var path = require('path');
 
+import  { HelperService } from '../services/helper.service';
+
 // Internal
 var sessionController = require('../modules/session/session.controller');
 var response = require('../services/response.service');
 var rootPath = '';
+
 // var rootPath = '/Users/donghoang/node/gk/repo/';
 class FilesService {
 
@@ -183,7 +186,7 @@ class FilesService {
     }
   }
 
-  downloadRequestFile(req, res, requestFile) {
+  async downloadRequestFile(req, res, requestFile) {
     try {
       // const sourceFile = rootPath +  + '/requests/' + requestFile.docId + '/' + requestFile.uploadedname;
       const sourceFile = path.join(rootPath, req['mySession'].clientId, 'requests', requestFile.docId, requestFile.uploadedname);
@@ -210,20 +213,88 @@ class FilesService {
           .then(() => {
             console.log('Destination file exist?', fs.existsSync(destFile));
             console.log('Send file address to client for downloading', destFile);
-            const result = {
-              message: '',
-              data: requestFile.originalname
-            }
-            response.ok(res, result);
+
+            // const result = {
+            //   message: '',
+            //   data: requestFile.originalname
+            // }
+            //
+            // response.ok(res, result);
           })
           .catch(err => console.error(err));
       } else {
-        const result = {
-          message: '',
-          data: requestFile.originalname
-        }
-        response.ok(res, result);
+        // const result = {
+        //   message: '',
+        //   data: requestFile.originalname
+        // }
+        // response.ok(res, result);
       }
+
+      const notification = {
+        tcode: 'tcode',
+        id: 'id',
+        data: {
+          desc: 'File is ready for download!',
+          url: requestFile.originalname
+        },
+        username: 'username',
+        creator: 'system',
+        isMark: true
+      }
+
+      HelperService.log(notification);
+
+      // let a = await notificationsController.module1x(req, res, notification);
+
+      const result = {
+        message: '',
+        data: requestFile.originalname
+      }
+      response.ok(res, result);
+    }
+    catch(error) {
+      const result = {
+        code: error.code || 500,
+        message: error.message,
+        data: "Download failed"
+      }
+      return response.serverError(res, result);
+    }
+
+  }
+
+  async downloadRequestDocument(req, res, requestFile) {
+    try {
+      // const sourceFile = rootPath +  + '/requests/' + requestFile.docId + '/' + requestFile.uploadedname;
+      const sourceFile = path.join(rootPath, req['mySession'].clientId, 'requests', requestFile.docId, requestFile.uploadedname);
+      console.log('Source file exist?', fs.existsSync(sourceFile));
+
+      const destDir = path.join(rootPath, 'download');
+      // const destDir = '../repo/download/';
+      console.log('Destination dir exist?', fs.existsSync(destDir));
+
+      const destFile = path.join(destDir, requestFile.originalname);
+      console.log('Destination file exist?', fs.existsSync(destFile));
+
+      if (!fs.existsSync(destDir)){
+        fs.mkdirSync(destDir);
+      }
+
+      console.log('Source: ', sourceFile);
+      console.log('Destination: ', destFile);
+
+      // If file exist do not copy again
+      if (!fs.existsSync(destFile)) {
+        // Async
+        fs.copy(sourceFile, destFile)
+          .then(() => {
+            console.log('Destination file exist?', fs.existsSync(destFile));
+            console.log('Send file address to client for downloading', destFile);
+          })
+          .catch(err => console.error(err));
+      }
+
+      return requestFile.originalname
     }
     catch(error) {
       const result = {
