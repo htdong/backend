@@ -6,7 +6,9 @@ var Schema = mongoose.Schema;
 
 // Internal
 var ConstantsBase = require('../config/base/constants.base');
-import  { SimpleHash } from './simpleHash.service';
+
+var simpleHash = require('../../services/simpleHash.service');
+// import  { SimpleHash } from './simpleHash.service';
 
 // Schema
 var CounterSchema = new Schema ({

@@ -7,6 +7,7 @@ var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
+var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 
 var response = require('../../services/response.service');
@@ -21,39 +22,41 @@ var StandardApprovers = require('./standardApprovers');
  *****************************************************************************************/
 var RequestApprovalController = {
   getModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('RequestApproval', RequestApprovalSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      RequestApprovalController.handleServerError(req, res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'RequestApproval', RequestApprovalSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     {
+    //       useMongoClient: true,
+    //       promiseLibrary: require("bluebird")
+    //     }
+    //   );
+    //   return systemDb.model('RequestApproval', RequestApprovalSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   RequestApprovalController.handleServerError(req, res, err);
+    // }
   },
 
   getHistoryModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('RequestApprovalHistory', RequestApprovalHistorySchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      RequestApprovalController.handleServerError(req, res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'RequestApprovalHistory', RequestApprovalHistorySchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     {
+    //       useMongoClient: true,
+    //       promiseLibrary: require("bluebird")
+    //     }
+    //   );
+    //   return systemDb.model('RequestApprovalHistory', RequestApprovalHistorySchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   RequestApprovalController.handleServerError(req, res, err);
+    // }
   },
 
   findStandardApprovalItems: async (req: express.Request, res: express.Response) => {

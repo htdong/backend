@@ -1,4 +1,4 @@
-console.log('MailService');
+console.log('   /...MailService');
 
 var nodemailer = require('nodemailer');
 var response = require('./response.service');
@@ -13,15 +13,15 @@ var MailService = {
           user: "gkbps.services@gmail.com",
           pass: "dare.to@FAIL"
         }
-      });      
-    
+      });
+
       var mailOptions = {
         from: mailContent.from,
         to: mailContent.to,
         subject: mailContent.subject,
         text: mailContent.textMessage,
         html: mailContent.htmlMessage,
-      } 
+      }
 
       return smtpTransport.sendMail(mailOptions)
         .then(function(info){
@@ -29,7 +29,7 @@ var MailService = {
           return {
             status: 200,
             data: info
-          }                 
+          }
         })
         .catch(function(err){
           console.log(err);
@@ -38,18 +38,17 @@ var MailService = {
             message: 'sendMail failed!',
             data: err
           };
-        });                
+        });
 
-    } catch (err) {      
+    } catch (err) {
       return Promise.resolve({
         status: 500,
         message: 'Mail Service failed!',
         data: err
-      });       
-    }      
-    
+      });
+    }
+
   }
 }
 
 module.exports = MailService;
-  

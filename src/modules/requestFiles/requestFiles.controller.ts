@@ -8,11 +8,14 @@ var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
-import  { HelperService } from '../../services/helper.service';
+var helperService = require('../../services/helper.service');
+// import  { HelperService } from '../../services/helper.service';
 
+var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
-var FilesService = require('../../services/files.service');
+var fileService = require('../../services/files.service');
+// var FilesService = require('../../services/files.service');
 
 var RequestFileSchema = require('./requestFile.schema');
 var RequestFileHistorySchema = require('./requestFile.history.schema');
@@ -22,39 +25,41 @@ var notificationsController = require('../../modules/notification/notifications.
 var RequestFilesController = {
 
   getModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('RequestFile', RequestFileSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      RequestFilesController.handleServerError(req, res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'RequestFile', RequestFileSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     {
+    //       useMongoClient: true,
+    //       promiseLibrary: require("bluebird")
+    //     }
+    //   );
+    //   return systemDb.model('RequestFile', RequestFileSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   RequestFilesController.handleServerError(req, res, err);
+    // }
   },
 
   getHistoryModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('RequestFileHistory', RequestFileHistorySchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      RequestFilesController.handleServerError(req, res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'RequestFileHistory', RequestFileHistorySchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     {
+    //       useMongoClient: true,
+    //       promiseLibrary: require("bluebird")
+    //     }
+    //   );
+    //   return systemDb.model('RequestFileHistory', RequestFileHistorySchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   RequestFilesController.handleServerError(req, res, err);
+    // }
   },
 
   findFilesByRequestId: async (req: express.Request, res: express.Response) => {
@@ -102,7 +107,7 @@ var RequestFilesController = {
         console.log('body:', req.body);
         console.log('files:', req['files']);
 
-        let fileService = new FilesService();
+        // let fileService = new FilesService();
         let uploadStatus = await fileService.uploadRequestFile(req, res);
 
         let data = uploadStatus.data;
@@ -123,6 +128,8 @@ var RequestFilesController = {
         console.log(requestFiles);
 
         let createdFile = await requestFiles.save();
+
+        console.log(createdFile);
 
         const result = {
           message: 'Creation completed!',
@@ -156,11 +163,11 @@ var RequestFilesController = {
           return response.fail_notFound(res);
         } else {
           console.log('Generate temporary file for download');
-          let fileService = new FilesService();
+          // let fileService = new FilesService();
 
           let originalname = await fileService.downloadRequestDocument(req, res, requestFiles);
 
-          HelperService.log(req.body);
+          helperService.log(req.body);
 
           const notification = {
             tcode: 'dl',
@@ -180,16 +187,16 @@ var RequestFilesController = {
             isMark: true
           }
 
-          HelperService.log(notification);
+          helperService.log(notification);
 
-          let a = await notificationsController.module11(req, res, notification);
+          let notificationResult = await notificationsController.module11(req, res, notification);
 
           const result = {
             message: '',
-            data: notification
+            data: notificationResult
           }
-          response.ok(res, result);
 
+          setTimeout(()=>{response.ok(res, result);}, 5000);
 
         }
       }

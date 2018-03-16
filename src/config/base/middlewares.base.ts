@@ -16,71 +16,70 @@ var RoutesBase = require('./routes.base');
 //var DB = require('../../services/dbConnection.service');
 // import  { SimpleHash } from '../../services/simpleHash.service';
 
-class MiddlewaresBase {
+// CommnonJS
+var configuration = () => {
+  var app = express();
+  var serveStatic = require("serve-static");
+  var sessionController = require('../../modules/session/session.controller');
 
-  static get configuration() {
-    var app = express();
-    var serveStatic = require("serve-static");
-    var sessionController = require('../../modules/session/session.controller');
+  app.use(helmet());
+  app.use(compression());
 
-    app.use(helmet());
-    app.use(compression());
+  app.use(cors({ credentials: true }));
+  // app.use(function(req, res, next) { //allow cross origin requests
+  //     res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
+  //     res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  //     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  //     res.header("Access-Control-Allow-Credentials", 'true');
+  //     next();
+  // });
 
-    app.use(cors({ credentials: true }));
-    // app.use(function(req, res, next) { //allow cross origin requests
-    //     res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
-    //     res.header("Access-Control-Allow-Origin", "http://localhost:3000");
-    //     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    //     res.header("Access-Control-Allow-Credentials", 'true');
-    //     next();
-    // });
-
-    app.use(logger('dev'));
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({ extended: false }));
+  app.use(logger('dev'));
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: false }));
 
 
-    // Temporarily block for POSTMAN test
-    var myFilter = (req) => {
-      const unlessArray = [
-        '/',
-        '/users/authenticate',
-        '/users/register',
-        '/users/forgot',
-        '/graphql',
-        'graphiql',
-        // '/repo/download/:id'
-      ];
-      // '/requestFiles/upload'
-      //console.log(unlessArray.indexOf(req.path));
+  // Temporarily block for POSTMAN test
+  var myFilter = (req) => {
+    const unlessArray = [
+      '/',
+      '/users/authenticate',
+      '/users/register',
+      '/users/forgot',
+      '/graphql',
+      'graphiql',
+      // '/repo/download/:id'
+    ];
+    // '/requestFiles/upload'
+    //console.log(unlessArray.indexOf(req.path));
 
-      const urls = req.path.split("/");
-      //console.log(urls[1]);
+    const urls = req.path.split("/");
+    //console.log(urls[1]);
 
-      if ((unlessArray.indexOf(req.path)!=-1)||(urls[1]=='repo')) {
-        return true;
-      }
-      return false;
+    if ((unlessArray.indexOf(req.path)!=-1)||(urls[1]=='repo')) {
+      return true;
     }
+    return false;
+  }
 
-    app.use(expressJwt({ secret: ConstantsBase.secret }).unless(myFilter));
+  app.use(expressJwt({ secret: ConstantsBase.secret }).unless(myFilter));
 
-    /*
-     * Session Parameters
-     * [1] DB (gkcSession)            FIXED
-     * [2] Collection                 client id = token
-     * [3] Session (userId)           req.headers.usr
-     * Session Store
-     * - User's right population after authentication
-     * - Cache of user info and other session data
-     * - TTL or Expiry concept
-     * - Separate of concerns (session vs user) and easy maintenance
-     */
 
-    app.use((req, res, next) => {
-      // let simpleHash = new SimpleHash();
-      let urls = req.path.split("/");
-      console.log(`
+   // * Session Parameters
+   // * [1] DB (gkcSession)            FIXED
+   // * [2] Collection                 client id = token
+   // * [3] Session (userId)           req.headers.usr
+   // * Session Store
+   // * - User's right population after authentication
+   // * - Cache of user info and other session data
+   // * - TTL or Expiry concept
+   // * - Separate of concerns (session vs user) and easy maintenance
+
+
+  app.use((req, res, next) => {
+    // let simpleHash = new SimpleHash();
+    let urls = req.path.split("/");
+    console.log(`
 --------------------------------
 NEW REQUEST INFO:
 [1] Request: ${req.path}
@@ -88,39 +87,153 @@ NEW REQUEST INFO:
 [3] Option:  ${req.body.option}
 [4] Params:  ${JSON.stringify(urls)}
 [5] Token:
-    - In headers: ${req.headers.token}
-    - In body:    ${req.body.token}
+  - In headers: ${req.headers.token}
+  - In body:    ${req.body.token}
 [6] Array Web Token (AWT[0]=wklge; AWT[1]=wkyear): ${req.headers.awt}
 [7] Userid: ${req.headers.usr}
 --------------------------------
 PROGRESS INFO:
-      `);
+    `);
 
-      if (req.headers.usr && req.headers.awt) {
-        sessionController.get(req, res)
-          .then((mySession)=>{
-            req['mySession'] = mySession;
-            // console.log(req['mySession']);
-            next();
-          })
-          .catch((err)=>{
-            console.log('Error');
-            console.log(err);
-            res.status(400).send(err.message);
-          });
-      } else {
-        // Important: More processing is required for the current request
-        next();
-      }
-    });
+    if (req.headers.usr && req.headers.awt) {
+      sessionController.get(req, res)
+        .then((mySession)=>{
+          req['mySession'] = mySession;
+          // console.log(req['mySession']);
+          next();
+        })
+        .catch((err)=>{
+          console.log('Error');
+          console.log(err);
+          res.status(400).send(err.message);
+        });
+    } else {
+      // Important: More processing is required for the current request
+      next();
+    }
+  });
 
-    app.use(new RoutesBase().routes);
+  // console.log(RoutesBase.routes)
+  // CommonJS
+  app.use(RoutesBase.routes());
+  // ES6
+  // app.use(new RoutesBase().routes);
 
-    return app;
+  return app;
+}
 
-  }
+module.exports = {
+  configuration: configuration
+}
 
-};
-
-Object.seal(MiddlewaresBase);
-export = module.exports = MiddlewaresBase;
+// ES6
+// class MiddlewaresBase {
+//
+//   static get configuration() {
+//     var app = express();
+//     var serveStatic = require("serve-static");
+//     var sessionController = require('../../modules/session/session.controller');
+//
+//     app.use(helmet());
+//     app.use(compression());
+//
+//     app.use(cors({ credentials: true }));
+//     // app.use(function(req, res, next) { //allow cross origin requests
+//     //     res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
+//     //     res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+//     //     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//     //     res.header("Access-Control-Allow-Credentials", 'true');
+//     //     next();
+//     // });
+//
+//     app.use(logger('dev'));
+//     app.use(bodyParser.json());
+//     app.use(bodyParser.urlencoded({ extended: false }));
+//
+//
+//     // Temporarily block for POSTMAN test
+//     var myFilter = (req) => {
+//       const unlessArray = [
+//         '/',
+//         '/users/authenticate',
+//         '/users/register',
+//         '/users/forgot',
+//         '/graphql',
+//         'graphiql',
+//         // '/repo/download/:id'
+//       ];
+//       // '/requestFiles/upload'
+//       //console.log(unlessArray.indexOf(req.path));
+//
+//       const urls = req.path.split("/");
+//       //console.log(urls[1]);
+//
+//       if ((unlessArray.indexOf(req.path)!=-1)||(urls[1]=='repo')) {
+//         return true;
+//       }
+//       return false;
+//     }
+//
+//     app.use(expressJwt({ secret: ConstantsBase.secret }).unless(myFilter));
+//
+//
+//      // * Session Parameters
+//      // * [1] DB (gkcSession)            FIXED
+//      // * [2] Collection                 client id = token
+//      // * [3] Session (userId)           req.headers.usr
+//      // * Session Store
+//      // * - User's right population after authentication
+//      // * - Cache of user info and other session data
+//      // * - TTL or Expiry concept
+//      // * - Separate of concerns (session vs user) and easy maintenance
+//
+//
+//     app.use((req, res, next) => {
+//       // let simpleHash = new SimpleHash();
+//       let urls = req.path.split("/");
+//       console.log(`
+// --------------------------------
+// NEW REQUEST INFO:
+// [1] Request: ${req.path}
+// [2] Method:  ${req.method}
+// [3] Option:  ${req.body.option}
+// [4] Params:  ${JSON.stringify(urls)}
+// [5] Token:
+//     - In headers: ${req.headers.token}
+//     - In body:    ${req.body.token}
+// [6] Array Web Token (AWT[0]=wklge; AWT[1]=wkyear): ${req.headers.awt}
+// [7] Userid: ${req.headers.usr}
+// --------------------------------
+// PROGRESS INFO:
+//       `);
+//
+//       if (req.headers.usr && req.headers.awt) {
+//         sessionController.get(req, res)
+//           .then((mySession)=>{
+//             req['mySession'] = mySession;
+//             // console.log(req['mySession']);
+//             next();
+//           })
+//           .catch((err)=>{
+//             console.log('Error');
+//             console.log(err);
+//             res.status(400).send(err.message);
+//           });
+//       } else {
+//         // Important: More processing is required for the current request
+//         next();
+//       }
+//     });
+//
+//     console.log(RoutesBase.routes)
+//     // app.use(new RoutesBase().routes);
+//     app.use(RoutesBase.routes());
+//
+//     return app;
+//
+//   }
+//
+// };
+//
+// Object.seal(MiddlewaresBase);
+// export = module.exports = MiddlewaresBase;

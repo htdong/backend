@@ -5,12 +5,14 @@ var json2csv = require('json2csv');
 var fastCSV = require('fast-csv');
 var deep = require('deep-diff').diff;
 
-import  { HelperService } from '../../services/helper.service';
+var helperService = require('../../services/helper.service');
+// import  { HelperService } from '../../services/helper.service';
 
 var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
+var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
 var FilesService = require('../../services/files.service');
@@ -384,7 +386,7 @@ var GkClientsController = {
         };
 
         let history = await GkClientHistory.paginate(query, options);
-        HelperService.log(history);
+        helperService.log(history);
         const result = {
           data: history.docs,
           total: history.total,
@@ -1608,18 +1610,20 @@ var GkClientsController = {
   * @return {Mongoose Model} module
   */
   getModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird")}
-      );
-      return systemDb.model('GkClient', GkClientSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'GkClient', GkClientSchema);
+
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird")}
+    //   );
+    //   return systemDb.model('GkClient', GkClientSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   /**
@@ -1632,18 +1636,19 @@ var GkClientsController = {
   * @return {Mongoose Model} moduleHistory
   */
   getHistoryModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird") }
-      );
-      return systemDb.model('GkClientHistory', GkClientHistorySchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'GkClientHistory', GkClientHistorySchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird") }
+    //   );
+    //   return systemDb.model('GkClientHistory', GkClientHistorySchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   /**
@@ -1656,18 +1661,19 @@ var GkClientsController = {
   * @return {Mongoose Model} moduleRequest
   */
   getRequestModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird") }
-      );
-      return systemDb.model('GkClientRequest', GkClientRequestSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'GkClientRequest', GkClientRequestSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird") }
+    //   );
+    //   return systemDb.model('GkClientRequest', GkClientRequestSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   /**
@@ -1680,19 +1686,21 @@ var GkClientsController = {
   * @return {Mongoose Model} moduleJournal
   */
   getRequestJournalModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird") }
-      );
-      // TODO: Replace GkClientRequestSchema by GkClientJournalSchema
-      return systemDb.model('GkClientRequestJournal', GkClientRequestSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    // TODO: Replace GkClientRequestSchema by GkClientJournalSchema
+    return DBConnect.connectSystemDB(req, res, 'GkClientRequestJournal', GkClientRequestSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird") }
+    //   );
+    //   // TODO: Replace GkClientRequestSchema by GkClientJournalSchema
+    //   return systemDb.model('GkClientRequestJournal', GkClientRequestSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   // getRequestHistoryModel: async (req: express.Request, res: express.Response) => {
@@ -1721,18 +1729,19 @@ var GkClientsController = {
   * @return {Mongoose Model} moduleDashboard
   */
   getDashboardModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird") }
-      );
-      return systemDb.model('GkClientDashboard', GkClientDashboardSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'GkClientDashboard', GkClientDashboardSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird") }
+    //   );
+    //   return systemDb.model('GkClientDashboard', GkClientDashboardSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   /**
@@ -1745,50 +1754,55 @@ var GkClientsController = {
   * @return {Mongoose Model} moduleReport
   */
   getReportModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird") }
-      );
-      // TODO: Replace GkClientDashboardSchema by GkClientReportSchema
-      return systemDb.model('GkClientReport', GkClientDashboardSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    // TODO: Replace GkClientDashboardSchema by GkClientReportSchema
+    return DBConnect.connectSystemDB(req, res, 'GkClientReport', GkClientDashboardSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird") }
+    //   );
+    //   // TODO: Replace GkClientDashboardSchema by GkClientReportSchema
+    //   return systemDb.model('GkClientReport', GkClientDashboardSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   getDashboardItemsModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird") }
-      );
-      return systemDb.model('DashboardItems', DashboardItemsSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'DashboardItems', DashboardItemsSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird") }
+    //   );
+    //   return systemDb.model('DashboardItems', DashboardItemsSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   getPropertyModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird") }
-      );
-      // TODO: Replace DashboardItemsSchema by PropertiesSchema
-      return systemDb.model('Properties', DashboardItemsSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    // TODO: Replace DashboardItemsSchema by PropertiesSchema
+    return DBConnect.connectSystemDB(req, res, 'Properties', DashboardItemsSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird") }
+    //   );
+    //   // TODO: Replace DashboardItemsSchema by PropertiesSchema
+    //   return systemDb.model('Properties', DashboardItemsSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   /**
@@ -1827,7 +1841,7 @@ var GkClientsController = {
         delete trackParams.newData.created_at;
 
         const diff = deep(trackParams.oldData, trackParams.newData);
-        HelperService.log(diff);
+        helperService.log(diff);
 
         history = {
           docId: id,
@@ -1848,7 +1862,7 @@ var GkClientsController = {
           }]
         }
       }
-      HelperService.log(history);
+      helperService.log(history);
 
       let gkClientHistory = new GkClientHistory(history);
       return gkClientHistory.save();
@@ -2408,10 +2422,10 @@ var GkClientsController = {
       });
 
       // DEBUG
-      // console.log('addFields:', HelperService.log(addFields));
-      // console.log('group:', HelperService.log(group));
-      // console.log('sort:', HelperService.log(sort));
-      // console.log('key:', HelperService.log(key));
+      // console.log('addFields:', helperService.log(addFields));
+      // console.log('group:', helperService.log(group));
+      // console.log('sort:', helperService.log(sort));
+      // console.log('key:', helperService.log(key));
 
       let datasource = await GkClient.aggregate([
         // Stage 1
@@ -2427,7 +2441,7 @@ var GkClientsController = {
     		{ $addFields: key }
       ]);
 
-      // HelperService.log(datasource);
+      // helperService.log(datasource);
 
       const result = {
         data: datasource,

@@ -2,12 +2,14 @@ import express = require("express");
 Promise = require("bluebird");
 var fs = require("fs");
 
-import  { HelperService } from '../../services/helper.service';
+var helperService = require('../../services/helper.service');
+// import  { HelperService } from '../../services/helper.service';
 
 var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
+var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
 
@@ -21,39 +23,41 @@ var DashboardItemSchema = require('./dashboardItem.schema');
 var DashboardController = {
 
   getDashboardPageModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('DashboardPage', DashboardPageSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      DashboardController.handleServerError(req, res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'DashboardPage', DashboardPageSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     {
+    //       useMongoClient: true,
+    //       promiseLibrary: require("bluebird")
+    //     }
+    //   );
+    //   return systemDb.model('DashboardPage', DashboardPageSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   DashboardController.handleServerError(req, res, err);
+    // }
   },
 
   getDashboardItemModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('DashboardItem', DashboardItemSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      DashboardController.handleServerError(req, res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'DashboardItem', DashboardItemSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     {
+    //       useMongoClient: true,
+    //       promiseLibrary: require("bluebird")
+    //     }
+    //   );
+    //   return systemDb.model('DashboardItem', DashboardItemSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   DashboardController.handleServerError(req, res, err);
+    // }
   },
 
   findPaginatedDashboardPages: async (req: express.Request, res: express.Response) => {
@@ -97,7 +101,7 @@ var DashboardController = {
       console.log(req.params);
 
       let dashboardItems = await DashboardItems.find({module: req.params.id});
-      
+
       const result = {
         data: dashboardItems,
       }

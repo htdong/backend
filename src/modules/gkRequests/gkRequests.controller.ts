@@ -5,12 +5,14 @@ var json2csv = require('json2csv');
 var fastCSV = require('fast-csv');
 var deep = require('deep-diff').diff;
 
-import  { HelperService } from '../../services/helper.service';
+var helperService = require('../../services/helper.service');
+// import  { HelperService } from '../../services/helper.service';
 
 var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
+var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
 var security = require('../../services/security.service');
@@ -105,7 +107,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let client = await GkRequest.findById(req.params._id);
-        HelperService.log(client);
+        helperService.log(client);
         if (!client) {
           return response.fail_notFound(res);
         } else {
@@ -147,7 +149,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // HelperService.log(gkRequest);
+        // helperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -274,8 +276,8 @@ var GkRequestsController = {
     try {
       let GkRequest = await GkRequestsController.getModel(req, res);
       let params = req.query;
-      HelperService.log(params);
-      // HelperService.log(req.headers.usr);
+      helperService.log(params);
+      // helperService.log(req.headers.usr);
       const username = req['mySession'].username;
       let query = {};
 
@@ -341,7 +343,7 @@ var GkRequestsController = {
         default:
           return response.fail_preCondition(res, {});
       }
-      HelperService.log(query);
+      helperService.log(query);
 
       // TODO: Return data that fit to TRAY only, for better performance
       let options = {
@@ -385,7 +387,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // HelperService.log(gkRequest);
+        // helperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -438,7 +440,7 @@ var GkRequestsController = {
             gkRequest.remark = requestHeader.remark;
             gkRequest.requestor = requestHeader.requestor;
             gkRequest.owner = requestHeader.owner;
-            // HelperService.log(gkRequest);
+            // helperService.log(gkRequest);
             let updatedRequest = await gkRequest.save();
 
             if (updatedRequest) {
@@ -469,7 +471,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // HelperService.log(gkRequest);
+        // helperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -529,7 +531,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // HelperService.log(gkRequest);
+        // helperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -582,7 +584,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        HelperService.log(gkRequest);
+        helperService.log(gkRequest);
 
         const tcode = gkRequest.tcode;
 
@@ -711,7 +713,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        HelperService.log(gkRequest);
+        helperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -758,7 +760,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        HelperService.log(gkRequest);
+        helperService.log(gkRequest);
 
         const tcode = gkRequest.tcode;
 
@@ -924,7 +926,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // HelperService.log(gkRequest);
+        // helperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -1127,7 +1129,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        // HelperService.log(gkRequest);
+        // helperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -1161,17 +1163,17 @@ var GkRequestsController = {
           //   }
           // ]);
           // let arrayApproval = [standardApprovers.directManager.call(null)];
-          // HelperService.log(arrayApproval);
+          // helperService.log(arrayApproval);
           //
           // let data;
           // await Promise.all(arrayApproval).then((values) => {
-          //   HelperService.log(values);
+          //   helperService.log(values);
           //   data = values;
           // });
 
           // let requestApprovalFunction = await GkRequestsController.getAprrovalFunction(gkRequest.approval_type.items);
           // await Promise.all(requestApprovalFunction).then((values) => {
-          //   HelperService.log(values);
+          //   helperService.log(values);
           //   data = values;
           // });
 
@@ -1180,7 +1182,7 @@ var GkRequestsController = {
             let requestApprovalFunction = await GkRequestsController.getAprrovalFunction(gkRequest.approval_type.items);
             let requestApprovalFlow = [];
             await Promise.all(requestApprovalFunction).then((values) => {
-              HelperService.log(values);
+              helperService.log(values);
               requestApprovalFlow = GkRequestsController.concatArrayOfObjects(values);
             });
 
@@ -1272,7 +1274,7 @@ var GkRequestsController = {
       tmp = standardApprovers[approvalItems[i].fx];
       approvalFunction.push(tmp);
     }
-    // HelperService.log(approvalFunction);
+    // helperService.log(approvalFunction);
     return Promise.resolve(approvalFunction);
   },
 
@@ -1293,21 +1295,22 @@ var GkRequestsController = {
   * @return {Mongoose Model} gkRequest
   */
   getModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('GkRequest', GkRequestSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'GkRequest', GkRequestSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     {
+    //       useMongoClient: true,
+    //       promiseLibrary: require("bluebird")
+    //     }
+    //   );
+    //   return systemDb.model('GkRequest', GkRequestSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   /**
@@ -1320,21 +1323,22 @@ var GkRequestsController = {
   * @return {Mongoose Model} gkRequestHistory
   */
   getHistoryModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('GkRequestHistory', GkRequestHistorySchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'GkRequestHistory', GkRequestHistorySchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     {
+    //       useMongoClient: true,
+    //       promiseLibrary: require("bluebird")
+    //     }
+    //   );
+    //   return systemDb.model('GkRequestHistory', GkRequestHistorySchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   /**
@@ -1372,7 +1376,7 @@ var GkRequestsController = {
         delete trackParams.newData.created_at;
 
         const diff = deep(trackParams.oldData, trackParams.newData);
-        HelperService.log(diff);
+        helperService.log(diff);
 
         history = {
           docId: id,
@@ -1393,14 +1397,14 @@ var GkRequestsController = {
           }]
         }
       }
-      HelperService.log(history);
+      helperService.log(history);
 
       let gkRequestHistory = new GkRequestHistory(history);
 
       return gkRequestHistory.save();
     }
     catch (err) {
-      HelperService.log(err);
+      helperService.log(err);
     }
   },
 

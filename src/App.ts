@@ -2,19 +2,25 @@
 import * as path from 'path';
 import * as express from 'express';
 
-import MiddlewaresBase = require('./config/base/middlewares.base');
+var MiddlewaresBase = require('./config/base/middlewares.base');
 
-class App {
+// console.log(MiddlewaresBase.configuration);
 
-  // ref to Express instance
-  public express: express.Application;
+// CommonJS
+module.exports = express().use(MiddlewaresBase.configuration());
 
-  //Run configuration methods on the Express instance.
-  constructor() {
-    this.express = express();
-    this.express.use(MiddlewaresBase.configuration);
-  }
-
-}
-
-export default new App().express;
+// ES6 Class
+// class App {
+//
+//   // ref to Express instance
+//   public express: express.Application;
+//
+//   //Run configuration methods on the Express instance.
+//   constructor() {
+//     this.express = express();
+//     this.express.use(MiddlewaresBase.configuration);
+//   }
+//
+// }
+//
+// export default new App().express;

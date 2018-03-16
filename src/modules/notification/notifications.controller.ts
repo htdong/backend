@@ -1,12 +1,14 @@
 import express = require("express");
 Promise = require("bluebird");
 
-import  { HelperService } from '../../services/helper.service';
+var helperService = require('../../services/helper.service');
+// import  { HelperService } from '../../services/helper.service';
 
 var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
+var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
 
@@ -24,23 +26,24 @@ var NotificationsController = {
   * @return {Mongoose Model} module
   */
   getModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird")}
-      );
-      return systemDb.model('Notification', NotificationSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'Notification', NotificationSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird")}
+    //   );
+    //   return systemDb.model('Notification', NotificationSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   module11: async(req: express.Request, res: express.Response, notificationObject) => {
     try {
-      HelperService.log(notificationObject);
+      helperService.log(notificationObject);
 
       let Notification = await NotificationsController.getModel(req, res);
       let notification = new Notification(notificationObject);
@@ -48,7 +51,7 @@ var NotificationsController = {
       let notificationResult = await notification.save();
 
 
-      HelperService.log(notificationResult);
+      helperService.log(notificationResult);
 
       return notificationResult;
     }
@@ -79,7 +82,7 @@ var NotificationsController = {
       } else {
         let Notification = await NotificationsController.getModel(req, res);
         let notification = await Notification.findById(req.params._id);
-        HelperService.log(notification);
+        helperService.log(notification);
         if (!notification) {
           return response.fail_notFound(res);
         } else {

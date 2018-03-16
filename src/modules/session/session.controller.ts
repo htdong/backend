@@ -9,7 +9,10 @@ var ConstantsBase = require('../../config/base/constants.base');
 var SessionSchema = require('./session.schema');
 var response = require('../../services/response.service');
 
-import  { SimpleHash } from '../../services/simpleHash.service';
+var simpleHash = require('../../services/simpleHash.service');
+
+// import  { SimpleHash } from '../../services/simpleHash.service';
+
 /* SESSION MANAGEMENT APPROACH
  * Session is created at the first time of authentication
  * Session is update after the first time of authentication
@@ -125,7 +128,8 @@ var SessionController = {
         throw new Error('Session could not be retrieved for update!');
       } else {
         console.log('[Session-03] Session is being updated');
-        const awt = SimpleHash.decode_array(JSON.parse(req.headers.awt));
+        const awt = simpleHash.decode_array(JSON.parse(req.headers.awt));
+        // const awt = SimpleHash.decode_array(JSON.parse(req.headers.awt));
 
         // Any changes here must update schema as well
         existedSession.wklge = awt[0];

@@ -1,12 +1,14 @@
 import express = require("express");
 Promise = require("bluebird");
 
-import  { HelperService } from '../../services/helper.service';
+var helperService = require('../../services/helper.service');
+// import  { HelperService } from '../../services/helper.service';
 
 var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
+var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
 
@@ -24,23 +26,24 @@ var MessagesController = {
   * @return {Mongoose Model} module
   */
   getModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        { useMongoClient: true, promiseLibrary: require("bluebird")}
-      );
-      return systemDb.model('Message', MessageSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.handle_server_error(res, err);
-    }
+    return DBConnect.connectSystemDB(req, res, 'Message', MessageSchema);
+    // try {
+    //   const systemDbUri = ConstantsBase.urlSystemDb;
+    //   const systemDb = await mongoose.createConnection(
+    //     systemDbUri,
+    //     { useMongoClient: true, promiseLibrary: require("bluebird")}
+    //   );
+    //   return systemDb.model('Message', MessageSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.handle_server_error(res, err);
+    // }
   },
 
   module11: async(req: express.Request, res: express.Response, messageObject) => {
     try {
-      HelperService.log(messageObject);
+      helperService.log(messageObject);
 
       let Message = await MessagesController.getModel(req, res);
       let message = new Message(messageObject);
@@ -48,7 +51,7 @@ var MessagesController = {
       let messageResult = await message.save();
 
 
-      HelperService.log(messageResult);
+      helperService.log(messageResult);
 
       return messageResult;
     }
@@ -79,7 +82,7 @@ var MessagesController = {
       } else {
         let Message = await MessagesController.getModel(req, res);
         let message = await Message.findById(req.params._id);
-        HelperService.log(message);
+        helperService.log(message);
         if (!message) {
           return response.fail_notFound(res);
         } else {

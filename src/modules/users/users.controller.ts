@@ -8,15 +8,22 @@ var nodemailer = require('nodemailer');
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcryptjs';
 
-import  { HelperService } from '../../services/helper.service';
+var helperService = require('../../services/helper.service');
+// import  { HelperService } from '../../services/helper.service';
 
 var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
+var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
-var randomPassword = require('../../services/generatePassword.service');
-import  { SimpleHash } from '../../services/simpleHash.service';
+
+// var randomPassword = require('../../services/generatePassword.service');
+var passwordService = require('../../services/password.service');
+
+var simpleHash = require('../../services/simpleHash.service');
+// import  { SimpleHash } from '../../services/simpleHash.service';
+
 import { log } from "util";
 var response = require('../../services/response.service');
 var FilesService = require('../../services/files.service');
@@ -43,21 +50,22 @@ var GkClientSchema = require('../gkClients/gkClient.schema');
 var UsersController = {
 
   getModel: async (req: express.Request, res: express.Response, clientDb) => {
-    try {
-      const masterDbUri = ConstantsBase.urlMongo;
-      const masterDb = await mongoose.createConnection(
-        masterDbUri + clientDb +"_0000",
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return masterDb.model('User', UserSchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.fail_serverError(res, err);
-    }
+    return DBConnect.connectMasterDB(req, res, clientDb, 'User', UserSchema);
+    // try {
+    //   const masterDbUri = ConstantsBase.urlMongo;
+    //   const masterDb = await mongoose.createConnection(
+    //     masterDbUri + clientDb +"_0000",
+    //     {
+    //       useMongoClient: true,
+    //       promiseLibrary: require("bluebird")
+    //     }
+    //   );
+    //   return masterDb.model('User', UserSchema);
+    // }
+    // catch (err) {
+    //   err['data'] = 'Error in connecting server and create collection model!';
+    //   return response.fail_serverError(res, err);
+    // }
   },
 
   getHistoryModel: async (req: express.Request, res: express.Response) => {
@@ -101,8 +109,8 @@ var UsersController = {
       else {
         let GkClient = await GkClientsController.getModel(req, res);
         let client = await GkClient.findById(req.body.token);
-        
-        HelperService.log(client);
+
+        helperService.log(client);
 
         if (!client) {
           return response.fail_notFound(res);
@@ -110,7 +118,7 @@ var UsersController = {
           let User = await UsersController.getModel(req, res, client['clientDb']);
           let users = await User.find({ username: req.body.username});
 
-          HelperService.log(users);
+          helperService.log(users);
 
           if (users.length == 0) {
             return response.fail_notFound(res);
@@ -127,11 +135,11 @@ var UsersController = {
               // Generate JWT / AWT / Client and Sever session data
               const token = jwt.sign({ sub: clientUser._id }, ConstantsBase.secret);
               const defaultLge = clientUser.defaultLge || '';
-              const awt = SimpleHash.encode_array([
+              const awt = simpleHash.encode_array([
                 defaultLge,
                 new Date().getFullYear().toString(),
               ]);
-              const encodedTcodes = SimpleHash.encode_array(clientUser.tcodes.sort());
+              const encodedTcodes = simpleHash.encode_array(clientUser.tcodes.sort());
 
               // data to pass back to frontend client
               const data = {
@@ -151,7 +159,7 @@ var UsersController = {
                 tcodes:     encodedTcodes
               }
 
-              HelperService.log(data);
+              helperService.log(data);
 
               // session to be stored for later use at backend server
               req['mySession'] = {
@@ -244,11 +252,11 @@ var UsersController = {
         const token = jwt.sign({ sub: clientUser._id }, ConstantsBase.secret);
 
         const defaultLge = clientUser.defaultLge || '';
-        const awt = SimpleHash.encode_array([
+        const awt = simpleHash.encode_array([
           defaultLge,
           new Date().getFullYear().toString(),
         ]);
-        const encodedTcodes = SimpleHash.encode_array(clientUser.tcodes.sort());
+        const encodedTcodes = simpleHash.encode_array(clientUser.tcodes.sort());
 
         // data to pass back to frontend client
         data = {
@@ -473,8 +481,12 @@ var UsersController = {
           }
           else {
             let tempUser = users[0];
-            let password = new randomPassword;
-            let tempPassword = password.generate();
+            console.log('Users[0]: ', tempUser);
+            // let password = new randomPassword;
+            // let tempPassword = password.generate();
+            let tempPassword = passwordService.generate();
+            console.log(tempPassword);
+
             tempUser.hash = bcrypt.hashSync(tempPassword, 10);
             // console.log('Temp User: ', tempUser);
 
@@ -484,10 +496,12 @@ var UsersController = {
             const mailContent = {
               subject: 'Forgot password request!',
               from: 'GK|BPS',
-              textMessage: `Your new password is: ${password}`, // plain text body
-              htmlMessage: `<b>Your new password is: <i>${password}<i></b>`,  // html body
+              textMessage: `Your new password is: ${tempPassword}`, // plain text body
+              htmlMessage: `<b>Your new password is: <i>${tempPassword}<i></b>`,  // html body
               to: savedUser.email
             }
+
+            helperService.log(mailContent);
 
             let result = await MailService.send(res, mailContent);
 
