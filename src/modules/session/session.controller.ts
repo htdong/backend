@@ -1,17 +1,15 @@
-// External
+// EXTERNAL
 import express = require("express");
 var mongoose = require("mongoose");
 // mongoose.Promise = global.Promise; // Deprecatd: Mongoose built in promise
 mongoose.Promise = require("bluebird");
 
-// Internal
+// INTERNAL
 var ConstantsBase = require('../../config/base/constants.base');
 var SessionSchema = require('./session.schema');
 var response = require('../../services/response.service');
 
 var simpleHash = require('../../services/simpleHash.service');
-
-// import  { SimpleHash } from '../../services/simpleHash.service';
 
 /* SESSION MANAGEMENT APPROACH
  * Session is created at the first time of authentication
@@ -76,7 +74,7 @@ var SessionController = {
         message: 'Session Initialization Error!',
         data: error.message
       }
-      return response.serverError(res, result);
+      return response.fail_serverError(res, result);
     }
   },
 
@@ -107,7 +105,7 @@ var SessionController = {
         message: 'Session Retrieval Error',
         data: error.message
       }
-      return response.serverError(res, result);
+      return response.fail_serverError(res, result);
     }
   },
 
@@ -128,8 +126,7 @@ var SessionController = {
         throw new Error('Session could not be retrieved for update!');
       } else {
         console.log('[Session-03] Session is being updated');
-        const awt = simpleHash.decode_array(JSON.parse(req.headers.awt));
-        // const awt = SimpleHash.decode_array(JSON.parse(req.headers.awt));
+        const awt = simpleHash.decode_array(JSON.parse(req.headers.awt));        
 
         // Any changes here must update schema as well
         existedSession.wklge = awt[0];
@@ -156,7 +153,7 @@ var SessionController = {
         message: 'Session Retrieval Error',
         data: error.message
       }
-      return response.serverError(res, result);
+      return response.fail_serverError(res, result);
     }
 
   },

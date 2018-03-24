@@ -1,9 +1,13 @@
-// External
+/**
+*
+*/
+
+// EXTERNAL
 var mongoose = require("mongoose");
 var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
-// Schema
+// SCHEMA
 var DashboardPageSchema = new Schema ({
   module: {
     type: String,
@@ -17,7 +21,7 @@ var DashboardPageSchema = new Schema ({
     type: String,
     required: true
   },
-  name: {
+  label: {
     type: String,
     required: true
   },

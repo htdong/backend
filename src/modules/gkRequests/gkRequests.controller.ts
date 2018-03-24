@@ -15,9 +15,7 @@ mongoose.Promise = require("bluebird");
 var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
-var security = require('../../services/security.service');
-
-var FilesService = require('../../services/files.service');
+var security = require('../../services/permission.service');
 
 var GkRequestSchema = require('./gkRequest.schema');
 var GkRequestHistorySchema = require('./gkRequest.history.schema');
@@ -78,7 +76,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -198,7 +196,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -458,7 +456,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -519,7 +517,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -571,7 +569,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -701,7 +699,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -747,7 +745,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -914,7 +912,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -966,7 +964,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -1237,7 +1235,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 

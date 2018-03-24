@@ -1,8 +1,8 @@
-// External
+// EXTERNAL
 var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
-// Schema
+// SCHEMA
 var ChatSchema = new Schema ({
   id: {type: String},
   img: {type: String},

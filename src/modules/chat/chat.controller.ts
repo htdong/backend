@@ -1,16 +1,30 @@
-// External
+// EXTERNAL
 import express = require("express");
 var mongoose = require("mongoose");
 mongoose.Promise = require("bluebird");
 
-// Internal
+// INTERNAL
 var ConstantsBase = require('../../config/base/constants.base');
 var ChatSchema = require('./chat.schema');
 var response = require('../../services/response.service');
 
+/**
+* ChatController
+*
+* @function registerRoom
+* @function getRoom
+*/
 var ChatController = {
 
-  /* Register a room */
+  /**
+  * @function registerRoom
+  * Register a room
+  *
+  * @param req
+  * @param res
+  *
+  * @return {response}
+  */
   registerRoom: async(req: express.Request, res: express.Response)=> {
     try {
       const roomId = new mongoose.Types.ObjectId();
@@ -29,7 +43,15 @@ var ChatController = {
     }
   },
 
-  /* Return: Async directly return response via success or error [served as controler] */
+  /**
+  * @function getRoom
+  * get a room
+  *
+  * @param req
+  * @param res
+  *
+  * @return {response}
+  */
   getRoom: async(req: express.Request, res: express.Response) => {
     try {
       console.log('getRoom');
@@ -41,7 +63,6 @@ var ChatController = {
       }
       return response.fail_serverError(res, result);
     }
-
   },
 
 }

@@ -1,9 +1,9 @@
 console.log('   /...Loading [NotificationsRoutes]');
 
-// External
+// EXTERNAL
 var express = require("express");
 
-// Internal
+// INTERNAL
 var NotificationsController = require('./notifications.controller');
 var router = express.Router();
 

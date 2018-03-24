@@ -15,7 +15,6 @@ var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
 var fileService = require('../../services/files.service');
-// var FilesService = require('../../services/files.service');
 
 var RequestFileSchema = require('./requestFile.schema');
 var RequestFileHistorySchema = require('./requestFile.history.schema');
@@ -39,7 +38,6 @@ var RequestFilesController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   RequestFilesController.handleServerError(req, res, err);
     // }
   },
 
@@ -58,7 +56,6 @@ var RequestFilesController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   RequestFilesController.handleServerError(req, res, err);
     // }
   },
 
@@ -87,7 +84,7 @@ var RequestFilesController = {
       }
     }
     catch (err) {
-      RequestFilesController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
   },
 
@@ -107,8 +104,7 @@ var RequestFilesController = {
         console.log('body:', req.body);
         console.log('files:', req['files']);
 
-        // let fileService = new FilesService();
-        let uploadStatus = await fileService.uploadRequestFile(req, res);
+        let uploadStatus = await fileService.uploadRequestDocument(req, res);
 
         let data = uploadStatus.data;
 
@@ -139,7 +135,7 @@ var RequestFilesController = {
       }
     }
     catch (err) {
-      RequestFilesController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
   },
 
@@ -163,16 +159,16 @@ var RequestFilesController = {
           return response.fail_notFound(res);
         } else {
           console.log('Generate temporary file for download');
-          // let fileService = new FilesService();
 
           let originalname = await fileService.downloadRequestDocument(req, res, requestFiles);
 
           helperService.log(req.body);
 
+          // specify tcode of download
+          // dl = download
+          // in other case tcode is store in (req.body.tcode)
           const notification = {
             tcode: 'dl',
-            // dl = download
-            // req.body.tcode,
             id: '',
             icon: 'file_download',
             desc: originalname + ' is ready for download!',
@@ -202,7 +198,7 @@ var RequestFilesController = {
       }
     }
     catch (err) {
-      RequestFilesController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
 
   },
@@ -238,7 +234,7 @@ var RequestFilesController = {
       }
     }
     catch (err) {
-      RequestFilesController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
   },
 
@@ -287,7 +283,7 @@ var RequestFilesController = {
       }
     }
     catch (err) {
-      RequestFilesController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
   },
 
@@ -347,17 +343,9 @@ var RequestFilesController = {
       }
     }
     catch (err) {
-      RequestFilesController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
-  },
-
-  handleServerError: async(req: express.Request, res: express.Response, error) => {
-    const result = {
-      message: error['message'] || '',
-      data: error['data'] || []
-    }
-    return response.fail_serverError(res, result);
-  },
+  }
 
 }
 

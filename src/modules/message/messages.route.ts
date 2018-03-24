@@ -1,9 +1,9 @@
 console.log('   /...Loading [MessagesRoutes]');
 
-// External
+// EXTERNAL
 var express = require("express");
 
-// Internal
+// INTERNAL
 var MessagesController = require('./messages.controller');
 var router = express.Router();
 

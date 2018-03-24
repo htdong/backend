@@ -1,4 +1,4 @@
-// External pakages
+// EXTERNAL pakages
 import express = require("express");
 var mongoose = require("mongoose");
 var ObjectId = require('mongodb').ObjectID;
@@ -10,7 +10,7 @@ var json2csv = require('json2csv');
 var fastCSV = require('fast-csv');
 var deep = require('deep-diff').diff;
 
-// Internal packages
+// INTERNAL packages
 var ConstantsBase = require('../../config/base/constants.base');
 var GkClientSchema = require('./gkClient.schema');
 var GkClientHistorySchema = require('./gkClient.history.schema');

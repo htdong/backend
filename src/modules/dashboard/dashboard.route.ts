@@ -1,15 +1,15 @@
 console.log('   /...Loading [DashboardRoutes]');
 
-// External
+// EXTERNAL
 var express = require("express");
 
-// Internal
+// INTERNAL
 var DashboardController = require('./dashboard.controller');
 var router = express.Router();
 
-// Routes
+// ROUTES
 // IMPORTANT: Routes sequence is important as /:id could cover other get /xxx thus put at last
-router.get("/pages/:id", DashboardController.findPaginatedDashboardPages);
-router.get("/items/:id", DashboardController.getDashboardItems);
+router.get("/pages/:id", DashboardController.action1x);
+router.get("/items/:id", DashboardController.action12);
 
 module.exports = router;

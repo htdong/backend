@@ -1,9 +1,9 @@
-// External
+// EXTERNAL
 var mongoose = require("mongoose");
 var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
-// Schema
+// SCHEMA
 var GkClientDashboardSchema = new Schema ({
   name: {
     type: String,
@@ -29,12 +29,5 @@ GkClientDashboardSchema.pre('save', function (next) {
 
 GkClientDashboardSchema.plugin(mongoosePaginate);
 GkClientDashboardSchema.index({'$**': 'text'});
-/*
-GkClientSchema.index({
-  name: 'text',
-  db: 'text',
-  status1: 'text',
-  status2: 'text'
-});
-*/
+
 module.exports = GkClientDashboardSchema;

@@ -56,7 +56,7 @@ var NotificationsController = {
       return notificationResult;
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 

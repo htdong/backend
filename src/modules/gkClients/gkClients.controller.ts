@@ -15,14 +15,17 @@ mongoose.Promise = require("bluebird");
 var DBConnect = require('../../services/dbConnect.service');
 var ConstantsBase = require('../../config/base/constants.base');
 var response = require('../../services/response.service');
-var FilesService = require('../../services/files.service');
+var fileService = require('../../services/files.service');
 
 var GkClientSchema = require('./gkClient.schema');
 var GkClientRequestSchema = require('./gkClientRequest.schema');
 var GkClientDashboardSchema = require('./gkClientDashboard.schema');
+var GkClientReportSchema = require('./gkClientReport.schema');
 var GkClientHistorySchema = require('./gkClient.history.schema');
 
 var DashboardItemsSchema = require('../dashboard/dashboardItem.schema');
+
+var notificationsController = require('../notification/notifications.controller');
 
 var GkClientsController = {
 
@@ -69,7 +72,7 @@ var GkClientsController = {
       return response.ok_created(res, result);
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -183,7 +186,7 @@ var GkClientsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -523,7 +526,6 @@ var GkClientsController = {
       // console.log(csv);
 
       console.log('...[2]Generate temporary file for download');
-      let fileService = new FilesService();
       return fileService.downloadCSV(req, res, csv);
 
     }
@@ -669,7 +671,6 @@ var GkClientsController = {
       const tcode = 'gkcln28';
 
       console.log('...[1]Upload file to server');
-      let fileService = new FilesService();
       let uploadStatus = await fileService.upload(req, res);
 
       console.log('...[2]Remove items from Database');
@@ -927,7 +928,7 @@ var GkClientsController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -1367,7 +1368,43 @@ var GkClientsController = {
   */
   module6x: async(req: express.Request, res: express.Response) => {
     try {
-      return response.ok_pagination(res, {});
+      let GkClientReport = await GkClientsController.getReportModel(req, res);
+      let params = req.query;
+      console.log(params);
+      // console.log(req['mySession'].username);
+
+      let query = {
+        $and: [
+          {report: 'S'},
+          {name: {'$regex': params.filter, '$options' : 'i'}},
+          {
+            $or: [
+              {type: 'Public'},
+              {
+                $and: [
+                  {type: 'Private'},
+                  {creator: req['mySession'].username}
+                ]
+              },
+            ]
+          }
+        ]
+      };
+
+      let options = {
+        select: '_id name type creator status1 status2',
+        sort: JSON.parse(params.sort),
+        lean: false,
+        offset: parseInt(params.first),
+        limit: parseInt(params.rows)
+      };
+
+      let report = await GkClientReport.paginate(query, options);
+      const result = {
+        data: report.docs,
+        total: report.total,
+      }
+      return response.ok_pagination(res, result);
     }
     catch (err) {
       return response.handle_server_error(res, err);
@@ -1488,7 +1525,43 @@ var GkClientsController = {
   */
   module7x: async(req: express.Request, res: express.Response) => {
     try {
-      return response.ok_pagination(res, {});
+      let GkClientReport = await GkClientsController.getReportModel(req, res);
+      let params = req.query;
+      console.log(params);
+      // console.log(req['mySession'].username);
+
+      let query = {
+        $and: [
+          {report: 'D'},
+          {name: {'$regex': params.filter, '$options' : 'i'}},
+          {
+            $or: [
+              {type: 'Public'},
+              {
+                $and: [
+                  {type: 'Private'},
+                  {creator: req['mySession'].username}
+                ]
+              },
+            ]
+          }
+        ]
+      };
+
+      let options = {
+        select: '_id name type creator status1 status2',
+        sort: JSON.parse(params.sort),
+        lean: false,
+        offset: parseInt(params.first),
+        limit: parseInt(params.rows)
+      };
+
+      let report = await GkClientReport.paginate(query, options);
+      const result = {
+        data: report.docs,
+        total: report.total,
+      }
+      return response.ok_pagination(res, result);
     }
     catch (err) {
       return response.handle_server_error(res, err);
@@ -1746,7 +1819,7 @@ var GkClientsController = {
 
   /**
   * @function getReportModel
-  * To create a new mongoose model from (module report) Schema/ Collection in systemDb
+  * To create a new mongoose model from (module report summary) Schema/ Collection in systemDb
   *
   * @param {express.Request} req: express.Request that contain mySession
   * @param {express.Request} res: express.Response for responding the request in case
@@ -1754,21 +1827,7 @@ var GkClientsController = {
   * @return {Mongoose Model} moduleReport
   */
   getReportModel: async (req: express.Request, res: express.Response) => {
-    // TODO: Replace GkClientDashboardSchema by GkClientReportSchema
-    return DBConnect.connectSystemDB(req, res, 'GkClientReport', GkClientDashboardSchema);
-    // try {
-    //   const systemDbUri = ConstantsBase.urlSystemDb;
-    //   const systemDb = await mongoose.createConnection(
-    //     systemDbUri,
-    //     { useMongoClient: true, promiseLibrary: require("bluebird") }
-    //   );
-    //   // TODO: Replace GkClientDashboardSchema by GkClientReportSchema
-    //   return systemDb.model('GkClientReport', GkClientDashboardSchema);
-    // }
-    // catch (err) {
-    //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
-    // }
+    return DBConnect.connectSystemDB(req, res, 'GkClientReport', GkClientReportSchema);
   },
 
   getDashboardItemsModel: async (req: express.Request, res: express.Response) => {
@@ -1968,7 +2027,6 @@ var GkClientsController = {
   validateData: async(req: express.Request, res: express.Response, action) => {
     try {
       console.log('...[1]Upload file to server');
-      let fileService = new FilesService();
       let uploadStatus = await fileService.upload(req, res);
 
       console.log('...[2]Validate documents before creating/ updating Collection. Action = ' + action);
@@ -2118,6 +2176,24 @@ var GkClientsController = {
               },
             });
 
+            // Notification
+            const notification = {
+              tcode: 'error',
+              id: '',
+              icon: 'file_upload',
+              desc: 'Action 2x result',
+              url: '',
+              data: result,
+              username: req['mySession']['username'],
+              creator: 'system',
+              isMark: true
+            }
+
+            helperService.log(notification);
+
+            notificationsController.module11(req, res, notification);
+
+            // Track History
             if (validatedResult['data'].length - errorArray.length) {
               const filename = validatedResult['uploadStatus'].data.path.split('/');
               const trackParams = {
@@ -2150,7 +2226,6 @@ var GkClientsController = {
   patchCollective: async(req, res, patchType) => {
     try {
       console.log('...[1]Upload file to server');
-      let fileService = new FilesService();
       let uploadStatus = await fileService.upload(req, res);
 
       console.log('...[2]Patching items in Database, type: ' + patchType);

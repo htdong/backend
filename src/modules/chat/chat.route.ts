@@ -1,12 +1,19 @@
 console.log('   /...Loading [ChatRoutes]');
 
-var express = require("express");
-var router = express.Router();
+/**
+* SETUP A CHAT SERVER BESIDE TO PRC/REST SERVER
+* Websocket together with Webservices
+*/
 
+// EXTERNAL
+var express = require("express");
 var chatApp = express();
 var chatServer = require('http').createServer(chatApp);
 var io = require('socket.io')(chatServer);
 
+var router = express.Router();
+
+// INTERNAL
 var ChatController = require('./chat.controller');
 var response = require('../../services/response.service');
 
@@ -14,7 +21,7 @@ chatServer.listen(5000, () => {
   console.log('Chat server is listening on port 5000');
 });
 
-// Socket io
+// SOCKET IO CONFIGURATION
 var chatData =[];
 
 io.on('connection', (socket) => {
@@ -23,9 +30,10 @@ io.on('connection', (socket) => {
 
   socket.on('message', (message) => {
     console.log("Message Received: " + message);
-    const msg = JSON.parse(message);
+    var msg = JSON.parse(message);
+
     switch (msg.type) {
-      case 'i': 
+      case 'i':
       // Create a new room and invite others to join via addIntoRoom or chatWith
         console.log(`User ${socket.id} / ${msg.id} invite joining a room`);
         socket.join(msg.r, () => {
@@ -36,7 +44,7 @@ io.on('connection', (socket) => {
         // addRoomForUser(msg);
         break;
 
-      case 'a': 
+      case 'a':
       // Accept to join the room
         console.log(`User ${socket.id} / ${msg.id} accept invitation`);
         socket.join(msg.r, () => {
@@ -47,12 +55,12 @@ io.on('connection', (socket) => {
         // addRoomForUser(msg);
         break;
 
-      case 'm': 
+      case 'm':
       // Normal message
         io.to(msg.r).emit('message', {type:'new-message', text: message});
         break;
 
-      case 'l': 
+      case 'l':
       // Leave the room
         console.log(`User ${socket.id} / ${msg.id} leave a room`);
         socket.leave(msg.r, () => {
@@ -95,16 +103,16 @@ function addRoomForUser(msg) {
 
 function removeRoomOfUser(msg) {
   if (chatData[msg.id]) {
-    const i = chatData[msg.id].indexOf(msg.r);
+    var i = chatData[msg.id].indexOf(msg.r);
     console.log(i);
     chatData[msg.id].splice(i,1);
   }
 }
 
-// Routes
+// ROUTES
 router.get("/register", ChatController.registerRoom);
 router.get("/getRoom/:id", (req, res) => {
-  const result = {
+  var result = {
     data: chatData[req.params._id],
     // total: chatData[req.params._id].length
   }

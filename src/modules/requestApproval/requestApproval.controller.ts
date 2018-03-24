@@ -36,7 +36,6 @@ var RequestApprovalController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   RequestApprovalController.handleServerError(req, res, err);
     // }
   },
 
@@ -55,7 +54,6 @@ var RequestApprovalController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   RequestApprovalController.handleServerError(req, res, err);
     // }
   },
 
@@ -218,7 +216,7 @@ var RequestApprovalController = {
       }
     }
     catch (err) {
-      RequestApprovalController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
 
     // const sample = [
@@ -333,7 +331,7 @@ var RequestApprovalController = {
       }
     }
     catch (err) {
-      RequestApprovalController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
 
     // const sample = [
@@ -445,7 +443,7 @@ var RequestApprovalController = {
       return response.ok_created(res, result);
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -495,7 +493,7 @@ var RequestApprovalController = {
       }
     }
     catch (err) {
-      return response.handle_createOrSave(res, err);
+      return response.handle_createOrSaveError(res, err);
     }
   },
 
@@ -567,7 +565,7 @@ var RequestApprovalController = {
 
     }
     catch (err) {
-      RequestApprovalController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
   },
 
@@ -633,7 +631,7 @@ var RequestApprovalController = {
       }
     }
     catch (err) {
-      GkClientsController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
   },
 
@@ -673,15 +671,7 @@ var RequestApprovalController = {
     catch (err) {
       console.log(err);
     }
-  },
-
-  handleServerError: async(req: express.Request, res: express.Response, error) => {
-    const result = {
-      message: error['message'] || '',
-      data: error['data'] || []
-    }
-    return response.fail_serverError(res, result);
-  },
+  }
 
 };
 module.exports = RequestApprovalController;

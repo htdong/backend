@@ -12,7 +12,23 @@ const NUMBER_RE = /([\d])/g;
 const SPECIAL_CHAR_RE = /([\?\-])/g;
 const NON_REPEATING_CHAR_RE = /([\w\d\?\-])\1{2,}/g;
 
+/**
+* passwordService
+* All utilities on password
+*
+* @function isStrongEnough
+* @function generate
+*/
 var passwordService = {
+
+  /**
+  * @function isStrongEnough
+  * Check and return result if given password is strong or not
+  *
+  * @param {string} password
+  *
+  * @return {boolean}
+  */
   isStrongEnough: (password) => {
     const uc = password.match(UPPERCASE_RE);
     const lc = password.match(LOWERCASE_RE);
@@ -27,6 +43,12 @@ var passwordService = {
       sc && sc.length >= specialMinCount;
   },
 
+  /**
+  * @function generate
+  * Generate a random password based on the pre-defined rules
+  *
+  * @return {string}
+  */
   generate: () => {
     let password = "";
     const randomLength = Math.floor(Math.random() * (maxLength - minLength)) + minLength;
@@ -39,43 +61,3 @@ var passwordService = {
 }
 
 module.exports = passwordService;
-
-// class passwordService {
-//   maxLength = 18;
-//   minLength = 12;
-//   uppercaseMinCount = 3;
-//   lowercaseMinCount = 3;
-//   numberMinCount = 2;
-//   specialMinCount = 2;
-//   UPPERCASE_RE = /([A-Z])/g;
-//   LOWERCASE_RE = /([a-z])/g;
-//   NUMBER_RE = /([\d])/g;
-//   SPECIAL_CHAR_RE = /([\?\-])/g;
-//   NON_REPEATING_CHAR_RE = /([\w\d\?\-])\1{2,}/g;
-//
-//   isStrongEnough(password) {
-//     const uc = password.match(this.UPPERCASE_RE);
-//     const lc = password.match(this.LOWERCASE_RE);
-//     const n = password.match(this.NUMBER_RE);
-//     const sc = password.match(this.SPECIAL_CHAR_RE);
-//     const nr = password.match(this.NON_REPEATING_CHAR_RE);
-//     return password.length >= this.minLength &&
-//       !nr &&
-//       uc && uc.length >= this.uppercaseMinCount &&
-//       lc && lc.length >= this.lowercaseMinCount &&
-//       n && n.length >= this.numberMinCount &&
-//       sc && sc.length >= this.specialMinCount;
-//   }
-//
-//   generate() {
-//     let password = "";
-//     const randomLength = Math.floor(Math.random() * (this.maxLength - this.minLength)) + this.minLength;
-//     while (!this.isStrongEnough(password)) {
-//       password = generatePassword(randomLength, false, /[\w\d\?\-]/);
-//     }
-//     return password;
-//   }
-//
-// }
-//
-// export = passwordService;

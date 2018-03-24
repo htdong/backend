@@ -455,7 +455,7 @@ download: async(req: express.Request, res: express.Response)=> {
     */
 
     console.log('...[2]Generate temporary file for download');
-    let fileService = new FilesService();
+
     return fileService.downloadCSV(req, res, csv);
 
   }
@@ -516,7 +516,6 @@ deleteCollective: async(req: express.Request, res: express.Response) => {
     const tcode = 'gkcln28';
 
     console.log('...[1]Upload file to server');
-    let fileService = new FilesService();
     let uploadStatus = await fileService.upload(req, res);
 
     console.log('...[2]Remove items from Database');
@@ -1075,7 +1074,6 @@ history: async (req: express.Request, res: express.Response) => {
 validateData: async(req: express.Request, res: express.Response, action) => {
   try {
     console.log('...[1]Upload file to server');
-    let fileService = new FilesService();
     let uploadStatus = await fileService.upload(req, res);
 
     console.log('...[2]Validate documents before creating/ updating Collection. Action = ' + action);

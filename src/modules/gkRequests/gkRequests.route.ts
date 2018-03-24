@@ -1,13 +1,13 @@
 console.log('   /...Loading [RequestRoutes]');
 
-// External
+// EXTERNAL
 var express = require("express");
 
-// Internal
+// INTERNAL
 var GkRequestsController = require('./gkRequests.controller');
 var router = express.Router();
 
-// Routes
+// ROUTES
 // IMPORTANT: Routes sequence is important as /:id could cover other get /xxx thus put at last
 
 // REQUEST - OPERATIONS

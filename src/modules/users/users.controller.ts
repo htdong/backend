@@ -22,12 +22,11 @@ var ConstantsBase = require('../../config/base/constants.base');
 var passwordService = require('../../services/password.service');
 
 var simpleHash = require('../../services/simpleHash.service');
-// import  { SimpleHash } from '../../services/simpleHash.service';
 
 import { log } from "util";
 var response = require('../../services/response.service');
-var FilesService = require('../../services/files.service');
-var MailService = require('../../services/mail.service');
+
+var mailService = require('../../services/mail.service');
 var UserSchema = require('./user.schema');
 var UserHistorySchema = require('./user.history.schema');
 
@@ -50,7 +49,7 @@ var GkClientSchema = require('../gkClients/gkClient.schema');
 var UsersController = {
 
   getModel: async (req: express.Request, res: express.Response, clientDb) => {
-    return DBConnect.connectMasterDB(req, res, clientDb, 'User', UserSchema);
+    return DBConnect.connectMasterDB(req, res, 'User', UserSchema, clientDb);
     // try {
     //   const masterDbUri = ConstantsBase.urlMongo;
     //   const masterDb = await mongoose.createConnection(
@@ -192,119 +191,6 @@ var UsersController = {
     }
   },
 
-  /**
-  authenticate: (req: express.Request, res: express.Response): void => {
-    var systemDbUri = ConstantsBase.urlSystemDb;
-    var gkClient;
-    var clientUser;
-    var data;
-
-    var sessionController = require('../session/session.controller');
-
-    Promise.resolve()
-      .then(()=>{
-        console.log('[01] Validate token');
-        if (!mongoose.Types.ObjectId.isValid(req.body.token)) throw new Error('invalid_token');
-        return Promise.resolve();
-      })
-
-      .then(() => {
-        console.log('[02] Establish systemDb connection');
-        return mongoose.createConnection(systemDbUri, { useMongoClient: true, promiseLibrary: require("bluebird") });
-      })
-
-      .then((systemDb) => {
-        console.log('[03] Check if GK Client exist');
-        var GkClient = systemDb.model('GkClient', GkClientSchema);
-        return GkClient.findById(req.body.token);
-      })
-
-      .then((client) => {
-        if (!client) throw new Error('client_not_exist');
-        console.log('[04] Establish masterDb connection');
-        gkClient = client;
-        var masterDbUri = 'mongodb://localhost:27017/' + gkClient['clientDb'] + '_0000';
-        return mongoose.createConnection(masterDbUri, { useMongoClient: true, promiseLibrary: require("bluebird") });
-
-      })
-
-      .then((masterDb) => {
-        console.log('[05] Check if User exist');
-        var User = masterDb.model('User', UserSchema);
-        return User.find({ username: req.body.username})
-      })
-
-      .then((users) => {
-        if (users.length==0) throw new Error('user_not_exist');
-        clientUser = users[0];
-
-        console.log('[06] Authenticate User');
-        var checkPassword = new Promise((resolve, reject) => {
-          if (!bcrypt.compareSync(req.body.password, clientUser.hash)) reject(new Error('incorrect_password'));
-          resolve();
-        });
-        return checkPassword;
-      })
-
-      .then(() => {
-        console.log('[06] Generate JWT / AWT / Client and Sever session data');
-
-        const token = jwt.sign({ sub: clientUser._id }, ConstantsBase.secret);
-
-        const defaultLge = clientUser.defaultLge || '';
-        const awt = simpleHash.encode_array([
-          defaultLge,
-          new Date().getFullYear().toString(),
-        ]);
-        const encodedTcodes = simpleHash.encode_array(clientUser.tcodes.sort());
-
-        // data to pass back to frontend client
-        data = {
-          _id: clientUser._id,
-          username: clientUser.username,
-          firstName: clientUser.firstname,
-          lastName: clientUser.lastname,
-          title: clientUser.title,
-          avatar: clientUser.avatar,
-          token: token,
-          awt: awt,
-          wklge: clientUser.defaultLge,
-          wkyear: new Date().getFullYear().toString(),
-          tcodes: encodedTcodes,
-          lges: clientUser.lges,
-          status: clientUser.status
-        }
-
-        // session to be stored for later use at backend server
-        req['mySession'] = {
-          _id: clientUser._id,
-          clientId: req.body.token,
-          wklge: clientUser.defaultLge,
-          wkyear: new Date().getFullYear().toString(),
-          tcodes: clientUser.tcodes.sort(),
-        }
-
-        return Promise.resolve();
-      })
-
-      .then(()=>{
-        // console.log(req.mySession);
-        console.log('[Session]');
-        return sessionController.set(req, res);
-      })
-
-      .then(()=>{
-        res.send(data);
-      })
-
-      .catch((err) => {
-        console.log(err);
-        res.status(400).send(err.message);
-      });
-
-  },
-  */
-
   /*****************************************************************************************
    * REGISTER
    * Steps:
@@ -375,75 +261,6 @@ var UsersController = {
   },
 
   /*
-  register: (req: express.Request, res: express.Response): void => {
-
-    var systemDbUri = ConstantsBase.urlSystemDb;
-    var gkClient;
-    var clientUser;
-
-    Promise.resolve()
-      .then(()=>{
-        if (!mongoose.Types.ObjectId.isValid(req.body.token)) throw new Error('Invalid Token');
-        return Promise.resolve();
-      })
-      .then(() => {
-        console.log('[01] Validate token');
-        return mongoose.createConnection(systemDbUri, { useMongoClient: true, promiseLibrary: require("bluebird") });
-      })
-
-      .then((systemDb) => {
-        console.log('[02] Connect systemDb');
-        var GkClient = systemDb.model('GkClient', GkClientSchema);
-        return GkClient.findById(req.body.token);
-      })
-
-      .then((client) => {
-        if (!client) throw new Error('Client does not exist!');
-
-        console.log('[03] Get GkClient');
-        gkClient = client;
-        var masterDbUri = 'mongodb://localhost:27017/' + gkClient['clientDb'] + '_0000';
-        return mongoose.createConnection(masterDbUri, { useMongoClient: true, promiseLibrary: require("bluebird") });
-      })
-
-      .then((masterDb) => {
-        console.log('[04] Connect masterDb of gkClient');
-        var User = masterDb.model('User', UserSchema);
-
-        // Do not use standard way as hash is initialized and required
-        // clientUser = new User(req.body);
-        const tempUser = {
-          firstname: req.body.firstname,
-          lastname: req.body.lastname,
-          username: req.body.username,
-          hash: bcrypt.hashSync(req.body.password, 10),
-          email: req.body.email,
-        }
-        clientUser = new User(tempUser);
-        return User.find({ username: req.body.username});
-      })
-
-      .then((users)=>{
-        if (users.length>0) throw new Error('User already exist!');
-        console.log('[05] Register new user of gkClient');
-        return clientUser.save();
-      })
-
-      .then((user) => {
-        console.log('[--] New registered user:');
-        console.log(user);
-        res.send({"success": "create"});
-      })
-
-      .catch((err) => {
-        console.log(err);
-        res.status(400).send(err.message);
-      });
-
-  },
-  */
-
-  /*
    * FORGOT PASSWORD
    *
    * [01] Validate token
@@ -503,7 +320,7 @@ var UsersController = {
 
             helperService.log(mailContent);
 
-            let result = await MailService.send(res, mailContent);
+            let result = await mailService.send(res, mailContent);
 
             if (result.status == 200) {
               return response.ok(res, {});
@@ -521,102 +338,6 @@ var UsersController = {
     }
 
   },
-
-  // forgot: (req: express.Request, res: express.Response): void => {
-
-  //   var systemDbUri = ConstantsBase.urlSystemDb;
-  //   var gkClient;
-  //   var clientUser;
-
-  //   Promise.resolve()
-  //     .then(()=>{
-  //       if (!mongoose.Types.ObjectId.isValid(req.body.token)) throw new Error('Invalid Token');
-  //       return Promise.resolve();
-  //     })
-  //     .then(() => {
-  //       console.log('[01] Validate token');
-  //       return mongoose.createConnection(systemDbUri, { useMongoClient: true, promiseLibrary: require("bluebird") });
-  //     })
-
-  //     .then((systemDb) => {
-  //       console.log('[02] Connect systemDb');
-  //       var GkClient = systemDb.model('GkClient', GkClientSchema);
-  //       return GkClient.findById(req.body.token);
-  //     })
-
-  //     .then((client) => {
-  //       if (!client) throw new Error('Client does not exist!');
-
-  //       console.log('[03] Get GkClient');
-  //       gkClient = client;
-  //       var masterDbUri = 'mongodb://localhost:27017/' + gkClient['clientDb'] + '_0000';
-  //       return mongoose.createConnection(masterDbUri, { useMongoClient: true, promiseLibrary: require("bluebird") });
-  //     })
-
-  //     .then((masterDb) => {
-  //       console.log('[04] Connect masterDb of gkClient');
-  //       clientUser = masterDb.model('User', UserSchema);
-  //       console.log(req.body.email);
-  //       return clientUser.find({ email: req.body.email})
-  //     })
-
-  //     .then((users) => {
-  //       if (users.length==0) throw new Error('User does not exist!');
-
-  //       console.log('[05] Get user of gkClient by email');
-  //       return users[0];
-  //     })
-
-  //     .then((user) => {
-  //       var password = new randomPassword;
-  //       var tempPassword = password.generate();
-  //       var tempUser = user;
-  //       tempUser.hash = bcrypt.hashSync(tempPassword, 10);
-  //       console.log('[06] Save random password to user');
-  //       console.log(tempUser);
-
-  //       var changedUser = new clientUser(tempUser);
-  //       return changedUser.save();
-  //     })
-  //     .then((user)=>{
-  //       console.log('[07] Send random password to email of user!');
-
-  //       var subject = 'Forgot password request!';
-  //       var from = 'GK|BPS';
-  //       var textMessage = `Your new password is: ${user.hash}`; // plain text body
-  //       var htmlMessage = `<b>Your new password is: <i>${user.hash}<i></b>`; // html body
-  //       var to = user.email;
-  //       var smtpTransport = nodemailer.createTransport({
-  //         service: "Gmail",
-  //         auth: {
-  //             user: "gkbps.services@gmail.com",
-  //             pass: "dare.to@FAIL"
-  //         }
-  //       });
-
-  //       var mailOptions = {
-  //           from: from,
-  //           to: to,
-  //           subject: subject,
-  //           text: textMessage,
-  //           html: htmlMessage,
-  //       }
-  //       smtpTransport.sendMail(mailOptions, function(error, response){
-  //           if(error){
-  //               console.log(error);
-  //               throw error;
-  //           }else{
-  //               console.log('Email sent!');
-  //               res.send('Check your email please!');
-  //           }
-  //       });
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //       res.status(400).send(err.message);
-  //     });
-
-  // },
 
   create: (req: express.Request, res: express.Response): void => {
     try {
@@ -680,16 +401,8 @@ var UsersController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      UsersController.handleServerError(req, res, err);
+      response.fail_serverError(res, err);
     }
-  },
-
-  handleServerError: async(req: express.Request, res: express.Response, error) => {
-    const result = {
-      message: error['message'] || '',
-      data: error['data'] || []
-    }
-    return response.fail_serverError(res, result);
   },
 
   findById: (req: express.Request, res: express.Response): void => {

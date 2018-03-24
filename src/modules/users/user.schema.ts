@@ -1,9 +1,9 @@
-// External
+// EXTERNAL
 var mongoose = require("mongoose");
 var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
-// Schema
+// SCHEMA
 var UserSchema = new Schema ({
   firstname: { type: String, required: true},
   lastname: { type: String, required: true},

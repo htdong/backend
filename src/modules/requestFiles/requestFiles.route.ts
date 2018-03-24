@@ -1,13 +1,13 @@
 console.log('   /...Loading [RequestFilesRoutes]');
 
-// External
+// EXTERNAL
 var express = require("express");
 
-// Internal
+// INTERNAL
 var RequestFilesController = require('./requestFiles.controller');
 var router = express.Router();
 
-// Routes
+// ROUTES
 // IMPORTANT: Routes sequence is important as /:id could cover other get /xxx thus put at last
 
 router.get("/list/:_id", RequestFilesController.findFilesByRequestId);

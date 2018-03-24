@@ -1,9 +1,9 @@
-// External
+// EXTERNAL
 var mongoose = require("mongoose");
 var mongoosePaginate = require("mongoose-paginate");
 var Schema = mongoose.Schema;
 
-// Schema
+// SCHEMA
 var NotificationSchema = new Schema ({
   tcode: String,
   id: String,

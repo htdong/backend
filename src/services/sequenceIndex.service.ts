@@ -1,14 +1,12 @@
-// External
+// EXTERNAL
 import express = require("express");
 var mongoose = require("mongoose");
 mongoose.Promise = global. Promise;
 var Schema = mongoose.Schema;
 
-// Internal
+// INTERNAL
 var ConstantsBase = require('../config/base/constants.base');
-
 var simpleHash = require('../../services/simpleHash.service');
-// import  { SimpleHash } from './simpleHash.service';
 
 // Schema
 var CounterSchema = new Schema ({

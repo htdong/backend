@@ -1,26 +1,46 @@
 console.log('   /...MailService');
 
+// EXTERNAL
 var nodemailer = require('nodemailer');
+
+// INTERNAL
+var mailInfo = require('../config/base/constants.base');
 var response = require('./response.service');
 
-var MailService = {
+/**
+* mailService
+* To auto send mail to user
+*
+* @function send
+*/
+var mailService = {
+
+  /**
+  * @function send
+  * Send email to user
+  *
+  * @param res
+  * @param mailContent
+  *
+  * @return {Promise}
+  */
   send: async (res, mailContent) => {
     try {
       console.log('Mail Content: ', mailContent);
       let smtpTransport = nodemailer.createTransport({
-        service: "Gmail",
+        service: mailInfo.mailService,
         auth: {
-          user: "gkbps.services@gmail.com",
-          pass: "dare.to@FAIL"
+          user: mailInfo.mailUser,
+          pass: mailInfo.mailPassword
         }
       });
 
       var mailOptions = {
-        from: mailContent.from,
-        to: mailContent.to,
-        subject: mailContent.subject,
-        text: mailContent.textMessage,
-        html: mailContent.htmlMessage,
+        from:     mailContent.from,
+        to:       mailContent.to,
+        subject:  mailContent.subject,
+        text:     mailContent.textMessage,
+        html:     mailContent.htmlMessage,
       }
 
       return smtpTransport.sendMail(mailOptions)
@@ -51,4 +71,4 @@ var MailService = {
   }
 }
 
-module.exports = MailService;
+module.exports = mailService;

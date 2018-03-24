@@ -1,8 +1,8 @@
-// External
+// EXTERNAL
 var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
-// Schema
+// SCHEMA
 var SessionSchema = new Schema ({
   username: { type: String },
   clientId: { type: String },

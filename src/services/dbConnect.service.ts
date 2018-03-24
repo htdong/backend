@@ -1,8 +1,31 @@
+// EXTERNAL
 var mongoose = require("mongoose");
 mongoose.Promise = require("bluebird");
 var response = require('./response.service');
 
+/**
+* DBConnect
+* DB connection and closure utilities
+*
+* @function connectSystemDB
+* @function connectMasterDB
+* @function connectYearDB
+* @function closeDB
+*/
+
 var DBConnect = {
+
+  /**
+  * @function connectSystemDB
+  * To return a mongoose model of a collection in systemDB
+  *
+  * @param req          request
+  * @param res          response
+  * @param model        Name of collection model
+  * @param schema       Mongoose schema
+  *
+  * @return { Mongoose collection model }
+  */
   connectSystemDB: async(req, res, model, schema) => {
     try {
       const ConstantsBase = require('../config/base/constants.base');
@@ -19,7 +42,19 @@ var DBConnect = {
     }
   },
 
-  connectMasterDB: async(req, res, clientCode, model, schema) => {
+  /**
+  * @function connectMasterDB
+  * To return a mongoose model of a collection in client's MasterDB
+  *
+  * @param req          request
+  * @param res          response
+  * @param clientCode   initial name of client = prefix of client's database
+  * @param model        Name of collection model
+  * @param schema       Mongoose schema
+  *
+  * @return { Mongoose collection model }
+  */
+  connectMasterDB: async(req, res, model, schema, clientCode) => {
     try {
       const ConstantsBase = require('../config/base/constants.base');
       const DbUri = ConstantsBase.urlMongo;
@@ -38,7 +73,20 @@ var DBConnect = {
     }
   },
 
-  connectYearDB: async(req, res, clientCode, year, model, schema) => {
+  /**
+  * @function connectYearDB
+  * To return a mongoose model of a collection in client's YearDB
+  *
+  * @param req          request
+  * @param res          response
+  * @param clientCode   initial name of client = prefix of client's database
+  * @param year         working year
+  * @param model        Name of collection model
+  * @param schema       Mongoose schema
+  *
+  * @return { Mongoose collection model }
+  */
+  connectYearDB: async(req, res, model, schema, clientCode, year) => {
     try {
       const ConstantsBase = require('../config/base/constants.base');
       const DbUri = ConstantsBase.urlMongo;
@@ -57,6 +105,14 @@ var DBConnect = {
     }
   },
 
+  /**
+  * @function closeDB
+  * To close DB Connection
+  *
+  * @param req          request
+  * @param res          response
+  * @param DBConnection
+  */
   closeDB: async(req, res, DBConnection) => {
     try {
       if (DBConnection) {
