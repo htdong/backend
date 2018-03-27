@@ -14,6 +14,11 @@ var compression = require('compression')
 var ConstantsBase = require('./constants.base');
 var routesBase = require('./routes.base');
 
+/**
+* @module configuration
+* @description Define configuration for server set up
+*/
+
 var configuration = () => {
   const app = express();
   const serveStatic = require("serve-static");
@@ -25,7 +30,7 @@ var configuration = () => {
 
   app.use(cors({ credentials: true }));
   // app.use(function(req, res, next) { //allow cross origin requests
-  //     res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
+  //     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, OPTIONS, DELETE");
   //     res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   //     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   //     res.header("Access-Control-Allow-Credentials", 'true');
@@ -47,9 +52,7 @@ var configuration = () => {
       '/users/forgot',
       '/graphql',
       'graphiql',
-      // '/repo/download/:id'
     ];
-    // '/requestFiles/upload'
     //console.log(unlessArray.indexOf(req.path));
 
     const urls = req.path.split("/");

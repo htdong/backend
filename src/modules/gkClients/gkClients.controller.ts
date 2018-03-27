@@ -2136,14 +2136,6 @@ var GkClientsController = {
               case 'gkcln23':
                 console.log(item._id);
                 return GkClient.findByIdAndUpdate(item._id, item, {upsert:true}).catch(error => ({error}));
-                // if (item._id) {
-                //
-                // } else {
-                //   return GkClient.create(item).catch(error => ({error}));
-                // }
-                // console.log('here');
-                // return GkClient.create(item).catch(error => ({error}));
-
 
               default:
                 return response.fail_badRequest(res, '');

@@ -25,38 +25,10 @@ var RequestFilesController = {
 
   getModel: async (req: express.Request, res: express.Response) => {
     return DBConnect.connectSystemDB(req, res, 'RequestFile', RequestFileSchema);
-    // try {
-    //   const systemDbUri = ConstantsBase.urlSystemDb;
-    //   const systemDb = await mongoose.createConnection(
-    //     systemDbUri,
-    //     {
-    //       useMongoClient: true,
-    //       promiseLibrary: require("bluebird")
-    //     }
-    //   );
-    //   return systemDb.model('RequestFile', RequestFileSchema);
-    // }
-    // catch (err) {
-    //   err['data'] = 'Error in connecting server and create collection model!';
-    // }
   },
 
   getHistoryModel: async (req: express.Request, res: express.Response) => {
     return DBConnect.connectSystemDB(req, res, 'RequestFileHistory', RequestFileHistorySchema);
-    // try {
-    //   const systemDbUri = ConstantsBase.urlSystemDb;
-    //   const systemDb = await mongoose.createConnection(
-    //     systemDbUri,
-    //     {
-    //       useMongoClient: true,
-    //       promiseLibrary: require("bluebird")
-    //     }
-    //   );
-    //   return systemDb.model('RequestFileHistory', RequestFileHistorySchema);
-    // }
-    // catch (err) {
-    //   err['data'] = 'Error in connecting server and create collection model!';
-    // }
   },
 
   findFilesByRequestId: async (req: express.Request, res: express.Response) => {

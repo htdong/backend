@@ -28,6 +28,10 @@ const RequestFile = require('../../modules/requestFiles/requestFiles.route');
 const UsersRoutes = require('../../modules/users/users.route');
 const SessionRoutes = require('../../modules/session/session.route');
 
+/**
+* @module routes
+* @description Map second level routes (https:/server/secondRoutes) with module routes
+*/
 var routes = function() {
   // API restful introduction
   let router = express.Router();

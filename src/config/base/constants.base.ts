@@ -1,8 +1,8 @@
 console.log('...Pre-loading [Constants]');
 
 /**
-* ConstantBase
-* Singleton provide shared information on:
+* @module ConstantBase
+* @description Singleton provide shared information on:
 * - web server url address
 * - data server url addresses
 * - secret/ token
