@@ -16,3 +16,16 @@ Check out the [blog post](http://mherman.org/blog/2016/11/05/developing-a-restfu
 ## Sample Projects
 
 - [Simple whois REST API](https://github.com/wingsuitist/whoissv)
+
+
+dependencies check (https://github.com/maxogden/dependency-check)
+
+
+Check code lint (https://github.com/standard/standard)
+standard src/**
+
+
+Fix package.json (https://github.com/henrikjoreteg/fixpack)
+
+
+Translate package.json to readme

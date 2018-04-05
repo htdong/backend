@@ -169,7 +169,9 @@ var filesService = {
   * - 500
   */
   downloadCSV: async(req, res, csvData) => {
-    try {
+    return new Promise((resolve, reject) => {
+
+      console.log('Req params and query: ', req.params, req.query);
       const userFilename = req.query.filename || 'download'
       const filename = userFilename + '.csv';
       const dir = '../repo/download/';
@@ -180,21 +182,76 @@ var filesService = {
       }
 
       fs.writeFile(path, csvData, function(err) {
-        if (err) throw err;
-        console.log('Send file address to client for downloading');
-        res.json({filename: filename});
+        if (err) {
+          console.log(err);
+          reject(err);
+        } else {
+          const notification = {
+            tcode: 'dl',
+            id: '',
+            icon: 'file_download',
+            desc: filename + ' is ready for download!',
+            url: filename,
+            data: {
+              icon: 'file_download',
+              desc: filename + ' is ready for download!',
+              url: filename
+            },
+            username: req['mySession']['username'],
+            creator: 'system',
+            isMark: true
+          }
+
+          console.log('Confirm the file is ready for download: ' , notification);
+          return resolve(notification);
+        }
       });
+    });
 
-    }
-
-    catch(error) {
-      const result = {
-        code: error.code || 500,
-        message: error.message,
-        data: "Download failed"
-      }
-      return response.fail_serverError(res, result);
-    }
+    // try {
+    //   console.log('Req params and query: ', req.params, req.query);
+    //   const userFilename = req.query.filename || 'download'
+    //   const filename = userFilename + '.csv';
+    //   const dir = '../repo/download/';
+    //   const path = dir + filename;
+    //
+    //   if (!fs.existsSync(dir)){
+    //     fs.mkdirSync(dir);
+    //   }
+    //
+    //   fs.writeFile(path, csvData, function(err) {
+    //     if (err) throw err;
+    //
+    //     const notification = {
+    //       tcode: 'dl',
+    //       id: '',
+    //       icon: 'file_download',
+    //       desc: filename + ' is ready for download!',
+    //       url: filename,
+    //       data: {
+    //         icon: 'file_download',
+    //         desc: filename + ' is ready for download!',
+    //         url: filename
+    //       },
+    //       username: req['mySession']['username'],
+    //       creator: 'system',
+    //       isMark: true
+    //     }
+    //
+    //     console.log('Confirm the file is ready for download: ' , notification);
+    //     return Promise.resolve(notification);
+    //   });
+    //
+    // }
+    //
+    // catch(error) {
+    //   const result = {
+    //     code: error.code || 500,
+    //     message: error.message,
+    //     data: "Download failed"
+    //   }
+    //   return response.fail_serverError(res, result);
+    // }
   },
 
   /**

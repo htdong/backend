@@ -115,7 +115,7 @@ var GkClientsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -209,7 +209,7 @@ var GkClientsController = {
       return GkClientsController.patch(req, res, 'disable');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -232,7 +232,7 @@ var GkClientsController = {
       return GkClientsController.patch(req, res, 'enable');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -255,7 +255,7 @@ var GkClientsController = {
       return GkClientsController.patch(req, res, 'mark');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -278,7 +278,7 @@ var GkClientsController = {
       return GkClientsController.patch(req, res, 'unmark');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -344,7 +344,7 @@ var GkClientsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -399,7 +399,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -449,7 +449,7 @@ var GkClientsController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -482,7 +482,7 @@ var GkClientsController = {
       }
     }
     catch(error) {
-      return response.handle_server_error(res, error);
+      return response.fail_serverError(res, error);
     }
   },
 
@@ -522,16 +522,32 @@ var GkClientsController = {
       let GkClient = await GkClientsController.getModel(req, res);
       let clients = await GkClient.find({});
 
-      let csv = json2csv({data: clients, fields: fields});
+      let csv = await json2csv({data: clients, fields: fields});
       // console.log(csv);
 
       console.log('...[2]Generate temporary file for download');
-      return fileService.downloadCSV(req, res, csv);
 
+      // NOTE: Use promise as async/await does not work for downloadCSV
+      fileService.downloadCSV(req, res, csv)
+        .then((notification) => {
+          // console.log('downloadCSV: ', notification);
+          notificationsController.module11(req, res, notification)
+            .then((notificationResult) => {
+                // console.log('result: ', notificationResult)
+                const result = {
+                  message: '',
+                  data: notificationResult
+                }
+                setTimeout(()=>{response.ok(res, result);}, 5000);
+                // return response.ok(res, result);
+              }
+            );
+          }
+        );
     }
     catch (error) {
       error['data'] = "Download failed";
-      return response.handle_server_error(res, error);
+      return response.fail_serverError(res, error);
     }
   },
 
@@ -565,7 +581,7 @@ var GkClientsController = {
       }
     }
     catch(error) {
-      return response.handle_server_error(res, error);
+      return response.fail_serverError(res, error);
     }
   },
 
@@ -586,7 +602,7 @@ var GkClientsController = {
       return GkClientsController.patchCollective(req, res, 'disable');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -607,7 +623,7 @@ var GkClientsController = {
       return GkClientsController.patchCollective(req, res, 'enable');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -628,7 +644,7 @@ var GkClientsController = {
       return GkClientsController.patchCollective(req, res, 'mark');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -649,7 +665,7 @@ var GkClientsController = {
       return GkClientsController.patchCollective(req, res, 'unmark');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -752,7 +768,7 @@ var GkClientsController = {
        });
     }
     catch(error) {
-      return response.handle_server_error(res, error);
+      return response.fail_serverError(res, error);
     }
   },
 
@@ -792,7 +808,7 @@ var GkClientsController = {
         return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -805,7 +821,7 @@ var GkClientsController = {
   //
   //   }
   //   catch (err) {
-  //     return response.handle_server_error(res, err);
+  //     return response.fail_serverError(res, err);
   //   }
   // },
 
@@ -874,7 +890,7 @@ var GkClientsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -951,7 +967,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -987,7 +1003,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1007,7 +1023,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1028,7 +1044,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1049,7 +1065,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1069,7 +1085,7 @@ var GkClientsController = {
   //     return response.ok_pagination(res, {});
   //   }
   //   catch (err) {
-  //     return response.handle_server_error(res, err);
+  //     return response.fail_serverError(res, err);
   //   }
   // },
 
@@ -1091,7 +1107,7 @@ var GkClientsController = {
   //
   //   }
   //   catch (err) {
-  //     return response.handle_server_error(res, err);
+  //     return response.fail_serverError(res, err);
   //   }
   // },
 
@@ -1116,7 +1132,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1139,7 +1155,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1163,7 +1179,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1187,7 +1203,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1248,7 +1264,7 @@ var GkClientsController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1273,7 +1289,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1297,7 +1313,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1321,7 +1337,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1345,7 +1361,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1407,7 +1423,7 @@ var GkClientsController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1432,7 +1448,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1455,7 +1471,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1478,7 +1494,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1502,7 +1518,7 @@ var GkClientsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1564,7 +1580,7 @@ var GkClientsController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1616,7 +1632,7 @@ var GkClientsController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1654,7 +1670,7 @@ var GkClientsController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1695,7 +1711,7 @@ var GkClientsController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
+    //   return response.fail_serverError(res, err);
     // }
   },
 
@@ -1720,7 +1736,7 @@ var GkClientsController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
+    //   return response.fail_serverError(res, err);
     // }
   },
 
@@ -1745,7 +1761,7 @@ var GkClientsController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
+    //   return response.fail_serverError(res, err);
     // }
   },
 
@@ -1772,7 +1788,7 @@ var GkClientsController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
+    //   return response.fail_serverError(res, err);
     // }
   },
 
@@ -1788,7 +1804,7 @@ var GkClientsController = {
   //   }
   //   catch (err) {
   //     err['data'] = 'Error in connecting server and create collection model!';
-  //     return response.handle_server_error(res, err);
+  //     return response.fail_serverError(res, err);
   //   }
   // },
 
@@ -1813,7 +1829,7 @@ var GkClientsController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
+    //   return response.fail_serverError(res, err);
     // }
   },
 
@@ -1842,7 +1858,7 @@ var GkClientsController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
+    //   return response.fail_serverError(res, err);
     // }
   },
 
@@ -1860,7 +1876,7 @@ var GkClientsController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
+    //   return response.fail_serverError(res, err);
     // }
   },
 
@@ -2008,7 +2024,7 @@ var GkClientsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -2329,7 +2345,7 @@ var GkClientsController = {
 
     }
     catch(error) {
-      return response.handle_server_error(res, error);
+      return response.fail_serverError(res, error);
     }
   },
 
@@ -2363,7 +2379,7 @@ var GkClientsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -2403,7 +2419,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -2517,7 +2533,7 @@ var GkClientsController = {
       return response.ok(res, result);
 
     } catch(err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -2534,7 +2550,7 @@ var GkClientsController = {
       return response.ok(res, result);
 
     } catch(err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -2570,7 +2586,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -2608,7 +2624,7 @@ var GkClientsController = {
 
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 

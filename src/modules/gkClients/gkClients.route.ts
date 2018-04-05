@@ -12,7 +12,6 @@ var router = express.Router();
 
 // GET
 router.get("/", GkClientsController.module1x);
-router.get("/download", GkClientsController.module22);
 router.get("/changes", GkClientsController.module29);
 router.get("/requests/:_id", GkClientsController.module32); // findOrUpsertBlankObjectOfRequest
 router.get("/requests/:_id/changes", GkClientsController.module39); // findOrUpsertBlankObjectOfRequest
@@ -28,6 +27,7 @@ router.get("/:_id/changes", GkClientsController.module19);
 // POST
 router.post("/entry", GkClientsController.module11);
 router.post("/upload", GkClientsController.module21);
+router.post("/download", GkClientsController.module22);
 router.post("/upsert", GkClientsController.module23);
 router.post("/status/disable", GkClientsController.module24);
 router.post("/status/enable", GkClientsController.module25);

@@ -50,7 +50,6 @@ var NotificationsController = {
 
       let notificationResult = await notification.save();
 
-
       helperService.log(notificationResult);
 
       return notificationResult;
