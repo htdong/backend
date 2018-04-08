@@ -32,6 +32,8 @@ router.patch("/:_id/abort", GkRequestsController.abortRequest);
 
 // Request Approval Flow
 router.put("/:_id/approval/generateApprovalFlow", GkRequestsController.generateApprovalFlow);
+router.put("/:_id/approval/inviteApprover", GkRequestsController.inviteApprover);
+router.put("/:_id/approval/removeApprover", GkRequestsController.removeApprover);
 
 // REQUEST - MANAGEMENT/ ACCOUNTING
 // Management Data: Master & Transaction Data

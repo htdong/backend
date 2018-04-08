@@ -119,7 +119,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -249,7 +249,7 @@ var GkRequestsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -360,7 +360,7 @@ var GkRequestsController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -985,7 +985,7 @@ var GkRequestsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1006,7 +1006,7 @@ var GkRequestsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1027,7 +1027,7 @@ var GkRequestsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1048,7 +1048,7 @@ var GkRequestsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1069,7 +1069,7 @@ var GkRequestsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1090,7 +1090,7 @@ var GkRequestsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1111,7 +1111,7 @@ var GkRequestsController = {
       return response.ok_pagination(res, {});
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -1132,48 +1132,16 @@ var GkRequestsController = {
         if (!gkRequest) {
           return response.fail_notFound(res);
         } else {
-          // var standardApprovers = {
-          //   directManager: () => Promise.resolve([
-          //     {
-          //       type: 'm',
-          //       approver: {
-          //         username: 'directManager',
-          //         fullname: 'Direct Manager'
-          //       },
-          //       step: 'Direct Manager',
-          //       comment: '',
-          //       decision: '',
-          //       decided_at: ''
-          //     }
-          //   ])
-          // }
-          // var directManager = Promise.resolve([
-          //   {
-          //     type: 'm',
-          //     approver: {
-          //       username: 'directManager',
-          //       fullname: 'Direct Manager'
-          //     },
-          //     step: 'Direct Manager',
-          //     comment: '',
-          //     decision: '',
-          //     decided_at: ''
-          //   }
-          // ]);
-          // let arrayApproval = [standardApprovers.directManager.call(null)];
-          // helperService.log(arrayApproval);
-          //
-          // let data;
-          // await Promise.all(arrayApproval).then((values) => {
-          //   helperService.log(values);
-          //   data = values;
-          // });
 
-          // let requestApprovalFunction = await GkRequestsController.getAprrovalFunction(gkRequest.approval_type.items);
-          // await Promise.all(requestApprovalFunction).then((values) => {
-          //   helperService.log(values);
-          //   data = values;
-          // });
+          // /**
+          //  * SECURITY CHECK
+          //  * - Logged user must have document tcode (req.body.tcode) in (req['mySession'].tcodes)
+          //  * - Logged user (req['mySession'].username) must be in owner list (req.body.owner)
+          //  *   User (req.body.owner) is used for test as (requestHeader) default will include logged user
+          //  */
+          // if (!(security.hasTcode(req, req.body.tcode) && security.isOwner(req.body.owner, req))) {
+          //   return response.fail_forbidden(res);
+          // }
 
           if (gkRequest.status === 'Draft') {
 
@@ -1189,8 +1157,10 @@ var GkRequestsController = {
             let updatedGkRequest = await gkRequest.save();
 
             if (updatedGkRequest) {
+              // Save update History
+
               const result = {
-                data: updatedGkRequest,
+                data: updatedGkRequest['approval'],
               }
               return response.ok(res, result);
             } else {
@@ -1199,38 +1169,6 @@ var GkRequestsController = {
 
           }
 
-          // /**
-          //  * SECURITY CHECK
-          //  * - Logged user must have document tcode (req.body.tcode) in (req['mySession'].tcodes)
-          //  * - Logged user (req['mySession'].username) must be in owner list (req.body.owner)
-          //  *   User (req.body.owner) is used for test as (requestHeader) default will include logged user
-          //  */
-          // if (!(security.hasTcode(req, req.body.tcode) && security.isOwner(req.body.owner, req))) {
-          //   return response.fail_forbidden(res);
-          // }
-          // else {
-          //   // Update request document
-          //   gkRequest.desc = requestHeader.desc;
-          //   gkRequest.remark = requestHeader.remark;
-          //   gkRequest.status = requestHeader.status;
-          //   gkRequest.step = requestHeader.step;
-          //   gkRequest.approvalType = requestHeader.approvalType;
-          //   gkRequest.requestor = requestHeader.requestor;
-          //   gkRequest.owner = requestHeader.owner;
-          //
-          //   let updatedRequest = await gkRequest.save();
-          //
-          //   if (updatedRequest) {
-          //     // Save update history
-          //
-          //     const result = {
-          //       data: updatedRequest,
-          //     }
-          //     return response.ok(res, result);
-          //   } else {
-          //     throw new Error('Patch failed!');
-          //   }
-          // }
         }
       }
     }
@@ -1276,6 +1214,104 @@ var GkRequestsController = {
     return Promise.resolve(approvalFunction);
   },
 
+  inviteApprover: async (req: express.Request, res: express.Response) => {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+        const result = { message: `${req.params._id} is invalid Id!`}
+        return response.fail_badRequest(res, result);
+      } else {
+        // Retrieve document
+        let GkRequest = await GkRequestsController.getModel(req, res);
+        let gkRequest = await GkRequest.findById(req.params._id);
+        // helperService.log(gkRequest);
+
+        if (!gkRequest) {
+          return response.fail_notFound(res);
+        } else {
+          // helperService.log(req.body);
+
+          const invitedApprover = {
+            type: 'o',
+            username: req.body.approval.username,
+            fullname: req.body.approval.fullname,
+            step: req.body.approval.step,
+            comment: '',
+            decision: '',
+            decided_at: ''
+          }
+
+          const approvalLength = gkRequest.approval.length;
+          console.log(approvalLength, req.body.position);
+          let newApproval = [];
+
+          if (approvalLength > 0 ){
+            gkRequest.approval = await helperService.insertItemInArray(gkRequest.approval, invitedApprover, req.body.position, req.body.approval.seq);
+          } else {
+            gkRequest.approval.push(invitedApprover);
+          }
+
+          const updatedGkRequest = await gkRequest.save();
+
+          if (updatedGkRequest) {
+            // Save update History
+
+            const result = {
+              data: updatedGkRequest['approval'],
+            }
+            return response.ok(res, result);
+          } else {
+            throw new Error('Inser Approver Failed!');
+          }
+        }
+
+      }
+    }
+    catch (err) {
+      return response.fail_serverError(res, err);
+    }
+  },
+
+  removeApprover: async (req: express.Request, res: express.Response) => {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
+        const result = { message: `${req.params._id} is invalid Id!`}
+        return response.fail_badRequest(res, result);
+      } else {
+        // Retrieve document
+        let GkRequest = await GkRequestsController.getModel(req, res);
+        let gkRequest = await GkRequest.findById(req.params._id);
+        // helperService.log(gkRequest);
+
+        if (!gkRequest) {
+          return response.fail_notFound(res);
+        } else {
+          // helperService.log(req.body);
+
+          if (gkRequest.approval.indexOf(req.body.sequence)) {
+            gkRequest.approval.splice(req.body.sequence, 1);
+          }
+
+          const updatedGkRequest = await gkRequest.save();
+
+          if (updatedGkRequest) {
+            // Save update History
+
+            const result = {
+              data: updatedGkRequest['approval'],
+            }
+            return response.ok(res, result);
+          } else {
+            throw new Error('Remove Approver Failed!');
+          }
+        }
+
+      }
+    }
+    catch (err) {
+      return response.fail_serverError(res, err);
+    }
+  },
+
   /**
   * MONGOOSE MODEL
   * Return a document model that is dynalically attachable to target database
@@ -1294,21 +1330,6 @@ var GkRequestsController = {
   */
   getModel: async (req: express.Request, res: express.Response) => {
     return DBConnect.connectSystemDB(req, res, 'GkRequest', GkRequestSchema);
-    // try {
-    //   const systemDbUri = ConstantsBase.urlSystemDb;
-    //   const systemDb = await mongoose.createConnection(
-    //     systemDbUri,
-    //     {
-    //       useMongoClient: true,
-    //       promiseLibrary: require("bluebird")
-    //     }
-    //   );
-    //   return systemDb.model('GkRequest', GkRequestSchema);
-    // }
-    // catch (err) {
-    //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
-    // }
   },
 
   /**
@@ -1322,21 +1343,6 @@ var GkRequestsController = {
   */
   getHistoryModel: async (req: express.Request, res: express.Response) => {
     return DBConnect.connectSystemDB(req, res, 'GkRequestHistory', GkRequestHistorySchema);
-    // try {
-    //   const systemDbUri = ConstantsBase.urlSystemDb;
-    //   const systemDb = await mongoose.createConnection(
-    //     systemDbUri,
-    //     {
-    //       useMongoClient: true,
-    //       promiseLibrary: require("bluebird")
-    //     }
-    //   );
-    //   return systemDb.model('GkRequestHistory', GkRequestHistorySchema);
-    // }
-    // catch (err) {
-    //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
-    // }
   },
 
   /**

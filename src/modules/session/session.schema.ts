@@ -6,6 +6,7 @@ var Schema = mongoose.Schema;
 var SessionSchema = new Schema ({
   username: { type: String },
   clientId: { type: String },
+  clientDb: { type: String },
   wklge: { type: String },
   wkyear: { type: String },
   tcodes: [],

@@ -21,6 +21,12 @@ router.get("/reports/summary", GkClientsController.module6x);
 router.get("/reports/summary/:_id", GkClientsController.module62);
 router.get("/reports/detail", GkClientsController.module7x);
 router.get("/reports/detail/:_id", GkClientsController.module72);
+
+// Form Control
+router.get("/controls", GkClientsController.lazyDataForFormControl);
+router.get("/controls/list", GkClientsController.listDataForFormControl);
+router.get("/datasource", GkClientsController.datasource);
+
 router.get("/:_id", GkClientsController.module12);
 router.get("/:_id/changes", GkClientsController.module19);
 
@@ -117,12 +123,6 @@ router.delete("/:_id", GkClientsController.module18);
 // router.get("/reports/detail/:_id", GkClientsController.module72);
 // router.put("/reports/detail/:_id", GkClientsController.module73);
 // router.delete("/reports/detail/:_id", GkClientsController.module78);
-
-// Form Control
-router.get("/controls", GkClientsController.lazyDataForFormControl);
-router.get("/controls/list", GkClientsController.listDataForFormControl);
-
-router.get("/datasource", GkClientsController.datasource);
 
 // router.get("/api/lzMasterList", GkClientsController.lazyDataForFormControl);
 // router.get("/api/masterList", GkClientsController.apiMasterList);

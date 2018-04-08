@@ -37,7 +37,7 @@ var MessagesController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
+    //   return response.fail_serverError(res, err);
     // }
   },
 
@@ -96,7 +96,7 @@ var MessagesController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -140,7 +140,7 @@ var MessagesController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -190,7 +190,7 @@ var MessagesController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 

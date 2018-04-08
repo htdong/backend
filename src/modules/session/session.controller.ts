@@ -50,6 +50,7 @@ var SessionController = {
         // Any changes here must update schema as well
         existedSession.username = req['mySession']['username'];
         existedSession.clientId = req['mySession']['clientId'];
+        existedSession.clientDb = req['mySession']['clientDb'];
         existedSession.wklge = req['mySession']['wklge'];
         existedSession.wkyear = req['mySession']['wkyear'];
         existedSession.tcodes = req['mySession']['tcodes'];
@@ -126,7 +127,7 @@ var SessionController = {
         throw new Error('Session could not be retrieved for update!');
       } else {
         console.log('[Session-03] Session is being updated');
-        const awt = simpleHash.decode_array(JSON.parse(req.headers.awt));        
+        const awt = simpleHash.decode_array(JSON.parse(req.headers.awt));
 
         // Any changes here must update schema as well
         existedSession.wklge = awt[0];

@@ -7,6 +7,7 @@ var Schema = mongoose.Schema;
 var UserSchema = new Schema ({
   firstname: { type: String, required: true},
   lastname: { type: String, required: true},
+  fullname: { type: String },
   username: { type: String, required: true, unique: true},
   title: { type: String },
   avatar: { type: String },
@@ -18,10 +19,12 @@ var UserSchema = new Schema ({
   status: { type: String },
   created_at: Date,
   updated_at: Date,
+  status1: { type: String, default: 'Active' },
+  status2: { type: String, default: 'Unmarked' },
 }, { collection: 'users' });
 
 // Can not query directly but can call case by case
-UserSchema.virtual('fullname').get(function () {
+UserSchema.virtual('fullname1').get(function () {
   return this.firstname + ' ' + this.lastname;
 });
 

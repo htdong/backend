@@ -7,10 +7,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'directManager',
-          fullname: 'Direct Manager'
-        },
+        username: 'directManager',
+        fullname: 'Direct Manager',
         step: 'Direct Manager',
         comment: '',
         decision: '',
@@ -23,10 +21,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'departmentHead',
-          fullname: 'Department Head'
-        },
+        username: 'departmentHead',
+        fullname: 'Department Head',
         step: 'Department Head',
         comment: '',
         decision: '',
@@ -39,10 +35,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'doaManager',
-          fullname: 'DOA Manager'
-        },
+        username: 'doaManager',
+        fullname: 'DOA Manager',
         step: 'DOA Manager',
         comment: '',
         decision: '',
@@ -55,10 +49,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'doaManager',
-          fullname: 'DOA Manager'
-        },
+        username: 'doaManager',
+        fullname: 'DOA Manager',
         step: 'DOA Manager',
         comment: '',
         decision: '',
@@ -71,10 +63,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'directManager',
-          fullname: 'Direct Manager'
-        },
+        username: 'directManager',
+        fullname: 'Direct Manager',
         step: 'DOA Manager',
         comment: '',
         decision: '',
@@ -82,10 +72,8 @@ var StandardApprovers = {
       },
       {
         type: 'm',
-        approver: {
-          username: 'doaManager',
-          fullname: 'DOA Manager'
-        },
+        username: 'doaManager',
+        fullname: 'DOA Manager',
         step: 'DOA Manager',
         comment: '',
         decision: '',
@@ -93,10 +81,8 @@ var StandardApprovers = {
       },
       {
         type: 'm',
-        approver: {
-          username: 'doaSeniorManager',
-          fullname: 'DOA Senior Manager'
-        },
+        username: 'doaSeniorManager',
+        fullname: 'DOA Senior Manager',
         step: 'DOA Manager',
         comment: '',
         decision: '',
@@ -109,10 +95,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'doaManager',
-          fullname: 'DOA Manager'
-        },
+        username: 'doaManager',
+        fullname: 'DOA Manager',
         step: 'DOA Manager',
         comment: '',
         decision: '',
@@ -120,10 +104,8 @@ var StandardApprovers = {
       },
       {
         type: 'm',
-        approver: {
-          username: 'doaSeniorManager',
-          fullname: 'DOA Senior Manager'
-        },
+        username: 'doaSeniorManager',
+        fullname: 'DOA Senior Manager',
         step: 'DOA Manager',
         comment: '',
         decision: '',
@@ -137,10 +119,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'financeBusinessPartner',
-          fullname: 'Finance BP'
-        },
+        username: 'financeBusinessPartner',
+        fullname: 'Finance BP',
         step: 'Finance BP',
         comment: '',
         decision: '',
@@ -153,10 +133,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'dovFinanceBusinessPartner',
-          fullname: 'Finance BP'
-        },
+        username: 'dovFinanceBusinessPartner',
+        fullname: 'Finance BP',
         step: 'DOV Finance BP',
         comment: '',
         decision: '',
@@ -169,10 +147,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'dovFinanceBusinessPartner',
-          fullname: 'Finance BP'
-        },
+        username: 'dovFinanceBusinessPartner',
+        fullname: 'Finance BP',
         step: 'DOV Finance BP',
         comment: '',
         decision: '',
@@ -180,10 +156,8 @@ var StandardApprovers = {
       },
       {
         type: 'm',
-        approver: {
-          username: 'dovSeniorFinanceBusinessPartner',
-          fullname: 'Senior Finance BP'
-        },
+        username: 'dovSeniorFinanceBusinessPartner',
+        fullname: 'Senior Finance BP',
         step: 'DOV Finance BP',
         comment: '',
         decision: '',
@@ -196,10 +170,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'dovHrBusinessPartner',
-          fullname: 'Human Resource BP'
-        },
+        username: 'dovHrBusinessPartner',
+        fullname: 'Human Resource BP',
         step: 'Human Resource BP',
         comment: '',
         decision: '',
@@ -213,10 +185,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'chiefAccountant',
-          fullname: 'Chief Accountant'
-        },
+        username: 'chiefAccountant',
+        fullname: 'Chief Accountant',
         step: 'Chief Accountant',
         comment: '',
         decision: '',
@@ -229,10 +199,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'chiefFinanceOfficer',
-          fullname: 'Chief Financial Officer'
-        },
+        username: 'chiefFinanceOfficer',
+        fullname: 'Chief Financial Officer',
         step: 'Chief Financial Officer',
         comment: '',
         decision: '',
@@ -245,10 +213,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'chiefComplianceOfficer',
-          fullname: 'Chief Compliance Officer'
-        },
+        username: 'chiefComplianceOfficer',
+        fullname: 'Chief Compliance Officer',
         step: 'Chief Compliance Officer',
         comment: '',
         decision: '',
@@ -261,10 +227,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'chiefHumanCapitalOfficer',
-          fullname: 'Chief Human Capital Officer'
-        },
+        username: 'chiefHumanCapitalOfficer',
+        fullname: 'Chief Human Capital Officer',
         step: 'Chief Human Capital Officer',
         comment: '',
         decision: '',
@@ -277,10 +241,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'chiefMarketingOfficer',
-          fullname: 'Chief Marketing Officer'
-        },
+        username: 'chiefMarketingOfficer',
+        fullname: 'Chief Marketing Officer',
         step: 'Chief Marketing Officer',
         comment: '',
         decision: '',
@@ -293,10 +255,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'chiefExecutiveOfficer',
-          fullname: 'Chief Executive Officer'
-        },
+        username: 'chiefExecutiveOfficer',
+        fullname: 'Chief Executive Officer',
         step: 'Chief Executive Officer',
         comment: '',
         decision: '',
@@ -309,10 +269,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'generalManager',
-          fullname: 'General Manager'
-        },
+        username: 'generalManager',
+        fullname: 'General Manager',
         step: 'General Manager',
         comment: '',
         decision: '',
@@ -325,10 +283,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'generalDirector',
-          fullname: 'General Director'
-        },
+        username: 'generalDirector',
+        fullname: 'General Director',
         step: 'General Director',
         comment: '',
         decision: '',
@@ -342,10 +298,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'systemMasterData',
-          fullname: 'System Master Data'
-        },
+        username: 'systemMasterData',
+        fullname: 'System Master Data',
         step: 'System Master Data',
         comment: '',
         decision: '',
@@ -358,10 +312,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'legalEntityMasterData',
-          fullname: 'Legal Entity Master Data'
-        },
+        username: 'legalEntityMasterData',
+        fullname: 'Legal Entity Master Data',
         step: 'Legal Entity Master Data',
         comment: '',
         decision: '',
@@ -374,10 +326,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'vendorMasterData',
-          fullname: 'Vendor Master Data'
-        },
+        username: 'vendorMasterData',
+        fullname: 'Vendor Master Data',
         step: 'Vendor Master Data',
         comment: '',
         decision: '',
@@ -390,10 +340,8 @@ var StandardApprovers = {
     return Promise.resolve([
       {
         type: 'm',
-        approver: {
-          username: 'vendorMasterData',
-          fullname: 'Vendor Master Data'
-        },
+        username: 'vendorMasterData',
+        fullname: 'Vendor Master Data',
         step: 'Vendor Master Data',
         comment: '',
         decision: '',

@@ -37,7 +37,7 @@ var NotificationsController = {
     // }
     // catch (err) {
     //   err['data'] = 'Error in connecting server and create collection model!';
-    //   return response.handle_server_error(res, err);
+    //   return response.fail_serverError(res, err);
     // }
   },
 
@@ -95,7 +95,7 @@ var NotificationsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -155,7 +155,7 @@ var NotificationsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -179,7 +179,7 @@ var NotificationsController = {
       return NotificationsController.patch(req, res, 'mark');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -203,7 +203,7 @@ var NotificationsController = {
       return NotificationsController.patch(req, res, 'unmark');
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -247,7 +247,7 @@ var NotificationsController = {
       }
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
@@ -297,7 +297,7 @@ var NotificationsController = {
       return response.ok_pagination(res, result);
     }
     catch (err) {
-      return response.handle_server_error(res, err);
+      return response.fail_serverError(res, err);
     }
   },
 
