@@ -5,20 +5,33 @@ var Schema = mongoose.Schema;
 
 // SCHEMA
 var UserSchema = new Schema ({
+  username: { type: String, required: true, unique: true},
   firstname: { type: String, required: true},
   lastname: { type: String, required: true},
   fullname: { type: String },
-  username: { type: String, required: true, unique: true},
   title: { type: String },
+  position: {type: String},
+  doa: Number,
+  dov: Number,
+
+  directmanager: {},
+  department: {},
+
   avatar: { type: String },
   email: { type: String, required: true, unique: true},
+
   hash: { type: String, required: true },
+
   tcodes: [],
+
   defaultLge: { type: String },
   lges: [],
+
   status: { type: String },
+
   created_at: Date,
   updated_at: Date,
+
   status1: { type: String, default: 'Active' },
   status2: { type: String, default: 'Unmarked' },
 }, { collection: 'users' });

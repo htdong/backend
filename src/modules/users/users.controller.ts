@@ -250,6 +250,7 @@ var UsersController = {
                 username:   clientUser.username,
                 firstName:  clientUser.firstname,
                 lastName:   clientUser.lastname,
+                fullname:   clientUser.fullname,
                 title:      clientUser.title,
                 avatar:     clientUser.avatar,
                 token:      token,
@@ -267,10 +268,18 @@ var UsersController = {
               req['mySession'] = {
                 _id:      clientUser._id,
                 username: clientUser.username,
+                fullname: clientUser.fullname,
+                avatar: clientUser.avatar,
+
                 clientId: req.body.token,
                 clientDb: client.clientDb,
+                
                 wklge:    clientUser.defaultLge,
                 wkyear:   new Date().getFullYear().toString(),
+
+                directmanager: clientUser.directmanager,
+                department: clientUser.department,
+
                 setting:  client.setting,
                 tcodes:   clientUser.tcodes.sort(),
               }

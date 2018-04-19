@@ -43,14 +43,14 @@ var NotificationsController = {
 
   module11: async(req: express.Request, res: express.Response, notificationObject) => {
     try {
-      helperService.log(notificationObject);
+      // helperService.log(notificationObject);
 
       let Notification = await NotificationsController.getModel(req, res);
       let notification = new Notification(notificationObject);
 
       let notificationResult = await notification.save();
 
-      helperService.log(notificationResult);
+      // helperService.log(notificationResult);
 
       return notificationResult;
     }
@@ -81,7 +81,7 @@ var NotificationsController = {
       } else {
         let Notification = await NotificationsController.getModel(req, res);
         let notification = await Notification.findById(req.params._id);
-        helperService.log(notification);
+        // helperService.log(notification);
         if (!notification) {
           return response.fail_notFound(res);
         } else {
@@ -122,7 +122,7 @@ var NotificationsController = {
         let Notification = await NotificationsController.getModel(req, res);
         let notification = await Notification.findById(req.params._id);
 
-        console.log(notification);
+        // console.log(notification);
         if (!notification) {
           return response.fail_notFound(res);
         } else {
@@ -272,7 +272,7 @@ var NotificationsController = {
     try {
       let Notification = await NotificationsController.getModel(req, res);
       let params = req.query;
-      console.log(params);
+      // console.log(params);
 
       let query = {
         $or: [

@@ -48,12 +48,21 @@ var SessionController = {
       if (existedSession) {
         console.log('[Session-03] Session should be updated');
         // Any changes here must update schema as well
-        existedSession.username = req['mySession']['username'];
+        existedSession.clientId = req['mySession']['clientId'];
+        existedSession.fullname = req['mySession']['fullname'];
+        existedSession.avatar = req['mySession']['avatar'];
+
         existedSession.clientId = req['mySession']['clientId'];
         existedSession.clientDb = req['mySession']['clientDb'];
+
         existedSession.wklge = req['mySession']['wklge'];
         existedSession.wkyear = req['mySession']['wkyear'];
+
+        existedSession.directmanager = req['mySession']['directmanager'];
+        existedSession.department = req['mySession']['department'];
+
         existedSession.tcodes = req['mySession']['tcodes'];
+
         mySession =  await existedSession.save();
       } else {
         console.log('[Session-03] Session should be newly created');

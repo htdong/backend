@@ -22,6 +22,9 @@ var GkRequestHistorySchema = require('./gkRequest.history.schema');
 
 var StandardApprovers = require('../requestApproval/standardApprovers');
 
+var notificationsController = require('../notification/notifications.controller');
+var requestHistoriesController = require('../requestHistories/requestHistories.controller');
+
 var GkRequestsController = {
 
   /**
@@ -66,6 +69,15 @@ var GkRequestsController = {
         let createdRequest = await gkRequest.save();
 
         // TODO: Save the first history
+        const historyObject = {
+          "type" : "comment",
+          "docId" : createdRequest._id,
+          "header" : "<a href='#'>" + req['mySession'].username + "</a> created new request!",
+          "body" : "",
+          "footer" : "",
+        }
+        let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+        helperService.log(createdHistory);
 
         // Return reult
         const result = {
@@ -105,7 +117,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let client = await GkRequest.findById(req.params._id);
-        helperService.log(client);
+        // helperService.log(client);
         if (!client) {
           return response.fail_notFound(res);
         } else {
@@ -162,7 +174,7 @@ var GkRequestsController = {
 
           /**
            * SECURITY CHECK
-           * - Logged user must have document tcode (req.body.tcode) in (req['mySession'].tcodes)
+           * - Lsogged user must have document tcode (req.body.tcode) in (req['mySession'].tcodes)
            * - Logged user (req['mySession'].username) must be in owner list (req.body.owner)
            *   User (req.body.owner) is used for test as (requestHeader) default will include logged user
            */
@@ -170,6 +182,9 @@ var GkRequestsController = {
             return response.fail_forbidden(res);
           }
           else {
+            const oldData = Object.assign({}, gkRequest._doc);
+            // console.log('Old Data: ', oldData);
+
             // Update request document
             gkRequest.desc = requestHeader.desc;
             gkRequest.remark = requestHeader.remark;
@@ -180,9 +195,22 @@ var GkRequestsController = {
             gkRequest.owner = requestHeader.owner;
 
             let updatedRequest = await gkRequest.save();
+            // helperService.log(updatedRequest);
+
+            const diff = deep(oldData, updatedRequest._doc);
+            helperService.log(diff);
 
             if (updatedRequest) {
-              // Save update history
+              // TODO: Save the first history
+              const historyObject = {
+                "type" : "comment",
+                "docId" : updatedRequest._id,
+                "header" : "<a href='#'>" + req['mySession'].username + "</a> update request!",
+                "body" : "Changes: " + JSON.stringify(diff),
+                "footer" : "",
+              }
+              let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+              helperService.log(createdHistory);
 
               const result = {
                 data: updatedRequest,
@@ -274,7 +302,7 @@ var GkRequestsController = {
     try {
       let GkRequest = await GkRequestsController.getModel(req, res);
       let params = req.query;
-      helperService.log(params);
+      // helperService.log(params);
       // helperService.log(req.headers.usr);
       const username = req['mySession'].username;
       let query = {};
@@ -341,7 +369,7 @@ var GkRequestsController = {
         default:
           return response.fail_preCondition(res, {});
       }
-      helperService.log(query);
+      // helperService.log(query);
 
       // TODO: Return data that fit to TRAY only, for better performance
       let options = {
@@ -376,13 +404,22 @@ var GkRequestsController = {
   * @function abortRequest
   */
 
+  /**
+  * @function submitRequest
+  * Submit the request by sender or requestor
+  * Status to be changed to: P. Submit or In progress
+  *
+  * Logic:
+  * - If approval_type is yet selected then cancel submission (412)
+  * - If approval flow is not available then generate approval flow
+  */
   submitRequest: async (req: express.Request, res: express.Response) => {
     try {
       if (!mongoose.Types.ObjectId.isValid(req.params._id)) {
         const result = { message: `${req.params._id} is invalid Id!` }
         return response.fail_badRequest(res, result);
       } else {
-        // Retrieve document
+
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
         // helperService.log(gkRequest);
@@ -390,13 +427,6 @@ var GkRequestsController = {
         if (!gkRequest) {
           return response.fail_notFound(res);
         } else {
-          let requestHeader = req.body;
-          // const oldClient = JSON.stringify(client);
-
-          requestHeader.owner = [req['mySession'].username];
-          if (!requestHeader.owner.includes(requestHeader.requestor.username)) {
-            requestHeader.owner.push(requestHeader.requestor.username);
-          }
 
           /**
            * SECURITY CHECK
@@ -408,48 +438,134 @@ var GkRequestsController = {
             return response.fail_forbidden(res);
           }
           else {
-            // Check control over sender for split conditions
-            const controlSender = true;
 
-            if (req['mySession'].username === gkRequest.requestor.username) {
-              gkRequest.status = 'In progress';
-              // Approval Example
-              gkRequest.approved = ['approved'];
-              gkRequest.pic = {
-                username: 'gkpic',
-                fullname: 'gkpic',
-              };
-              gkRequest.step = 'PIC to approve';
-              gkRequest.planned = 'gkpic';
-              gkRequest.next = ['approver1', 'approver2', 'lastapprover'];
-            }
-            else {
-              gkRequest.status = 'P. Submit';
-              // Approval Example
-              gkRequest.approved = ['approved'];
-              gkRequest.pic = requestHeader.requestor;
-              gkRequest.step = 'Validation by requestor';
-              gkRequest.planned = 'gkpic';
-              gkRequest.next = ['approver1', 'approver2', 'lastapprover'];
-            }
-
-            // Update request document
-            gkRequest.desc = requestHeader.desc;
-            gkRequest.remark = requestHeader.remark;
-            gkRequest.requestor = requestHeader.requestor;
-            gkRequest.owner = requestHeader.owner;
-            // helperService.log(gkRequest);
-            let updatedRequest = await gkRequest.save();
-
-            if (updatedRequest) {
-              // Save update history
-
-              const result = {
-                data: updatedRequest,
+            /**
+            * Check if approval_type is determinable
+            */
+            if (!gkRequest.approval_type) {
+              const msg = {
+                message: 'Approval Type is not defined!',
+                data: []
               }
-              return response.ok(res, result);
+              return response.fail_preCondition(res, msg);
             } else {
-              throw new Error('Patch failed!');
+
+              let requestHeader = req.body;
+
+              /**
+              * Check real requestor to define: sender, requestor and owner roles
+              */
+              requestHeader.owner = [req['mySession'].username];
+              if (!requestHeader.owner.includes(requestHeader.requestor.username)) {
+                requestHeader.owner.push(requestHeader.requestor.username);
+              }
+
+              /**
+              * Check control over sender for split conditions
+              */
+              const controlSender = true;
+
+              /**
+              * Check if approval flow is correctly generated
+              */
+              let approvalFlow = await GkRequestsController.stimulateApprovalFlow(req, res, gkRequest);
+              let isInclusive = await GkRequestsController.checkApprovalFLow(gkRequest.approval, approvalFlow);
+              console.log('Comparison: ', isInclusive);
+
+              if ((!gkRequest.approval) || (!isInclusive)) {
+                gkRequest.approval = approvalFlow;
+                gkRequest.markModified('approval'); // IMPORTANT: To notify mongo dataset change
+              }
+              console.log('Approval: ', gkRequest.approval);
+              /**
+              * Submission branches
+              * 1. In progress
+              * 2. P. Submit
+              */
+              if (req['mySession'].username === gkRequest.requestor.username) {
+                gkRequest.status = 'In progress';
+
+                /**
+                * Initialize approver tracker
+                * approved: []
+                * pic: first approver
+                * planned: first approver
+                * next: from second to end array
+                */
+                gkRequest.approved = [];
+
+                gkRequest.pic = {
+                  username: gkRequest.approval[0].username,
+                  fullname: gkRequest.approval[0].fullname,
+                };
+
+                gkRequest.step = gkRequest.approval[0].step;
+
+                const approverLen = gkRequest.approval.length;
+                if (approverLen > 1) {
+                  gkRequest.planned = gkRequest.approval[1].username;
+                }
+
+                gkRequest.next =[];
+                for (let i=1; i<approverLen; i++) {
+                  gkRequest.next.push(gkRequest.approval[i].username);
+                }
+              }
+              else {
+                gkRequest.status = 'P. Submit';
+
+                /**
+                * Initialize approver tracker
+                * approved: []
+                * pic: requestor
+                * planned:
+                * next: []
+                */
+                gkRequest.approved = [];
+
+                gkRequest.pic = {
+                  username: gkRequest.requestor.username,
+                  fullname: gkRequest.requestor.fullname,
+                };
+
+                gkRequest.step = 'Requestor validation';
+                gkRequest.planned = gkRequest.approval[0].username;
+                const approverLen = gkRequest.approval.length;
+
+                gkRequest.next =[];
+                for (let i=1; i<approverLen; i++) {
+                  gkRequest.next.push(gkRequest.approval[i].username);
+                }
+              }
+
+              // Update request document
+              gkRequest.desc = requestHeader.desc;
+              gkRequest.remark = requestHeader.remark;
+              gkRequest.requestor = requestHeader.requestor;
+              gkRequest.owner = requestHeader.owner;
+              // helperService.log(gkRequest);
+              let updatedRequest = await gkRequest.save();
+
+              if (updatedRequest) {
+                // TODO: Save the first history
+                const historyObject = {
+                  "type" : "comment",
+                  "docId" : updatedRequest._id,
+                  "header" : "<a href='#'>" + req['mySession'].username + "</a> submit request!",
+                  "body" : "Nothing change or change to approval list",
+                  "footer" : "",
+                }
+                let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+                helperService.log(createdHistory);
+
+                const result = {
+                  data: updatedRequest,
+                }
+                return response.ok(res, result);
+              } else {
+                throw new Error('Patch failed!');
+              }
+
             }
           }
         }
@@ -501,7 +617,16 @@ var GkRequestsController = {
             let updatedRequest = await gkRequest.save();
 
             if (updatedRequest) {
-              // Save update history
+              // TODO: Save the first history
+              const historyObject = {
+                "type" : "comment",
+                "docId" : updatedRequest._id,
+                "header" : "<a href='#'>" + req['mySession'].username + "</a> withdraw the request!",
+                "body" : "",
+                "footer" : "",
+              }
+              let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+              helperService.log(createdHistory);
 
               const result = {
                 data: updatedRequest,
@@ -555,7 +680,16 @@ var GkRequestsController = {
             let updatedRequest = await gkRequest.save();
 
             if (updatedRequest) {
-              // Save update history
+              // TODO: Save the first history
+              const historyObject = {
+                "type" : "comment",
+                "docId" : updatedRequest._id,
+                "header" : "<a href='#'>" + req['mySession'].username + "</a> cancel the request!",
+                "body" : "",
+                "footer" : "",
+              }
+              let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+              helperService.log(createdHistory);
 
               const result = {
                 data: updatedRequest,
@@ -686,7 +820,16 @@ var GkRequestsController = {
           let updatedRequest = await gkRequest.save();
 
           if (updatedRequest) {
-            // Save update history
+            // TODO: Save the first history
+            const historyObject = {
+              "type" : "comment",
+              "docId" : updatedRequest._id,
+              "header" : "<a href='#'>" + req['mySession'].username + "</a> return the request!",
+              "body" : "",
+              "footer" : "",
+            }
+            let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+            helperService.log(createdHistory);
 
             const result = {
               data: updatedRequest,
@@ -711,7 +854,7 @@ var GkRequestsController = {
       } else {
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        helperService.log(gkRequest);
+        // helperService.log(gkRequest);
 
         if (!gkRequest) {
           return response.fail_notFound(res);
@@ -731,7 +874,16 @@ var GkRequestsController = {
             let updatedRequest = await gkRequest.save();
 
             if (updatedRequest) {
-              // Save update history
+              // TODO: Save the first history
+              const historyObject = {
+                "type" : "comment",
+                "docId" : updatedRequest._id,
+                "header" : "<a href='#'>" + req['mySession'].username + "</a> reject the request!",
+                "body" : "",
+                "footer" : "",
+              }
+              let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+              helperService.log(createdHistory);
 
               const result = {
                 data: updatedRequest,
@@ -758,7 +910,7 @@ var GkRequestsController = {
         // Retrieve document
         let GkRequest = await GkRequestsController.getModel(req, res);
         let gkRequest = await GkRequest.findById(req.params._id);
-        helperService.log(gkRequest);
+        // helperService.log(gkRequest);
 
         const tcode = gkRequest.tcode;
 
@@ -783,6 +935,7 @@ var GkRequestsController = {
                 if (GkRequestsController.isLastApprover(gkRequest)) {
                   gkRequest.status = 'Approved';
                   // gkRequest.approved.push(gkRequest.pic.username);
+                  gkRequest.step = '';
                   gkRequest.pic = {};
                 } else {
                   gkRequest.status = 'In progress';
@@ -791,7 +944,7 @@ var GkRequestsController = {
                     username: gkRequest.planned,
                     fullname: gkRequest.planned
                   }
-                  if (gkRequest.next.length === 0) {
+                  if (gkRequest.next.length < 1) {
                     gkRequest.planned = '';
                   } else {
                     gkRequest.planned = gkRequest.next[0];
@@ -811,22 +964,45 @@ var GkRequestsController = {
               } else {
                 if (GkRequestsController.isLastApprover(gkRequest)) {
                   gkRequest.status = 'Approved';
+
                   gkRequest.approved.push(gkRequest.pic.username);
+                  gkRequest.step = '';
                   gkRequest.pic = {};
                   gkRequest.planned = '';
+
+                  const approvalLen = gkRequest.approval.length;
+                  gkRequest.approval[approvalLen-1].decision = 'Approved';
+                  gkRequest.approval[approvalLen-1].decided_at = Date.now();
+                  gkRequest.markModified('approval'); // IMPORTANT: To notify mongo dataset change
+
                 } else {
                   gkRequest.status = 'In progress';
+
                   gkRequest.approved.push(gkRequest.pic.username);
+                  gkRequest.step = gkRequest.planned;
                   gkRequest.pic = {
                     username: gkRequest.planned,
                     fullname: gkRequest.planned
                   }
-                  if (gkRequest.next.length === 0) {
+                  if (gkRequest.next.length < 1) {
                     gkRequest.planned = '';
                   } else {
                     gkRequest.planned = gkRequest.next[0];
                     gkRequest.next.splice(0, 1);
                   }
+
+                  const approvalLen = gkRequest.approval.length;
+                  for (let i=0; i<approvalLen; i++) {
+                    console.log(gkRequest.approval[i].username, req['mySession'].username);
+
+                    if (gkRequest.approval[i].username === req['mySession'].username){
+                      gkRequest.approval[i].decision = 'Approved';
+                      gkRequest.approval[i].decided_at = Date.now();
+                      gkRequest.markModified('approval'); // IMPORTANT: To notify mongo dataset change
+                      break;
+                    }
+                  }
+
                 }
               }
               break;
@@ -897,9 +1073,19 @@ var GkRequestsController = {
 
           // Update request document
           let updatedRequest = await gkRequest.save();
+          helperService.log(updatedRequest);
 
           if (updatedRequest) {
-            // Save update history
+            // TODO: Save the first history
+            const historyObject = {
+              "type" : "comment",
+              "docId" : updatedRequest._id,
+              "header" : "<a href='#'>" + req['mySession'].username + "</a> approve the request!",
+              "body" : "Including invitation or not",
+              "footer" : "",
+            }
+            let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+            helperService.log(createdHistory);
 
             const result = {
               data: updatedRequest,
@@ -950,7 +1136,16 @@ var GkRequestsController = {
             let updatedRequest = await gkRequest.save();
 
             if (updatedRequest) {
-              // Save update history
+              // TODO: Save the first history
+              const historyObject = {
+                "type" : "comment",
+                "docId" : updatedRequest._id,
+                "header" : "<a href='#'>" + req['mySession'].username + "</a> abort the request!",
+                "body" : "",
+                "footer" : "",
+              }
+              let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+              helperService.log(createdHistory);
 
               const result = {
                 data: updatedRequest,
@@ -1143,28 +1338,69 @@ var GkRequestsController = {
           //   return response.fail_forbidden(res);
           // }
 
-          if (gkRequest.status === 'Draft') {
+          if ((gkRequest.status === 'Draft') && (gkRequest.approval_type)) {
 
-            let requestApprovalFunction = await GkRequestsController.getAprrovalFunction(gkRequest.approval_type.items);
+            const approvalParams = {
+              requestor: req['mySession'].username,
+              department: req['mySession'].department,
+              directmanager: req['mySession'].directmanager,
+              request_amount: 10000000,
+            };
+
+            let requestApprovalFunction = await GkRequestsController.getAprrovalFunction(req, res, gkRequest.approval_type.items, approvalParams);
+            console.log('request Approval Function: ', requestApprovalFunction.length);
+            const arrLen = requestApprovalFunction.length;
+
             let requestApprovalFlow = [];
-            await Promise.all(requestApprovalFunction).then((values) => {
-              helperService.log(values);
+
+            // SYNC
+            // for (let i=0; i<arrLen; i++) {
+            //   requestApprovalFlow.push(await requestApprovalFunction[i].call(this, req, res, approvalParams));
+            // }
+
+            // ASYNC
+            await Promise.all(requestApprovalFunction.map(callback => callback.call(this, req, res, approvalParams))).then((values) => {
+              // helperService.log(values);
               requestApprovalFlow = GkRequestsController.concatArrayOfObjects(values);
             });
+            console.log('Final Results');
+            helperService.log(requestApprovalFlow);
+
+            // DEBUG
+            // requestApprovalFlow = [
+            //   {
+            //     type: 'm',
+            //     username: 'financebp',
+            //     fullname: 'Finance BP',
+            //     step: 'Finance BP',
+            //     comment: '',
+            //     decision: '',
+            //     decided_at: ''
+            //   }];
 
             gkRequest.approval = requestApprovalFlow;
 
             let updatedGkRequest = await gkRequest.save();
 
             if (updatedGkRequest) {
-              // Save update History
+              // TODO: Save the first history
+              const historyObject = {
+                "type" : "comment",
+                "docId" : updatedGkRequest._id,
+                "header" : "<a href='#'>" + req['mySession'].username + "</a> generate approval flow!",
+                "body" : "Approval Type: " + updatedGkRequest.approval_type.desc,
+                "footer" : "",
+              }
+              let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+              // helperService.log(createdHistory);
 
               const result = {
                 data: updatedGkRequest['approval'],
               }
+
               return response.ok(res, result);
             } else {
-              throw new Error('Patch failed!');
+              throw new Error('Patch failed! May be due to wrong status or approval type is undefined!');
             }
 
           }
@@ -1177,41 +1413,99 @@ var GkRequestsController = {
     }
   },
 
-  getAprrovalFunction: async (approvalItems) => {
+  stimulateApprovalFlow: async(req, res, gkRequest) => {
+    try {
+      const approvalParams = {
+        requestor: req['mySession'].username,
+        department: req['mySession'].department,
+        directmanager: req['mySession'].directmanager,
+        request_amount: 10000000,
+      };
+
+      let requestApprovalFunction = await GkRequestsController.getAprrovalFunction(req, res, gkRequest.approval_type.items, approvalParams);
+      console.log('request Approval Function: ', requestApprovalFunction.length);
+
+      const arrLen = requestApprovalFunction.length;
+
+      let requestApprovalFlow = [];
+
+      // SYNC
+      // for (let i=0; i<arrLen; i++) {
+      //   requestApprovalFlow.push(await requestApprovalFunction[i].call(this, req, res, approvalParams));
+      // }
+
+      // ASYNC
+      await Promise.all(requestApprovalFunction.map(callback => callback.call(this, req, res, approvalParams))).then((values) => {
+        // helperService.log(values);
+        requestApprovalFlow = GkRequestsController.concatArrayOfObjects(values);
+      });
+      console.log('Final Results');
+      helperService.log(requestApprovalFlow);
+
+      return Promise.resolve(requestApprovalFlow);
+    }
+    catch (err) {
+      return response.fail_serverError(res, err);
+    }
+  },
+
+  getAprrovalFunction: async (req, res, approvalItems, approvalParams) => {
     let standardApprovers = {
-      directManager: StandardApprovers.directManager.call(null),
-      departmentHead: StandardApprovers.departmentHead.call(null),
-      doaManager: StandardApprovers.doaManager.call(null),
-      doaManagerExcludeDirectManager: StandardApprovers.doaManagerExcludeDirectManager.call(null),
-      doaManagers: StandardApprovers.doaManagers.call(null),
-      doaManagersExcludeDirectManager: StandardApprovers.doaManagersExcludeDirectManager.call(null),
-      financeBusinessPartner: StandardApprovers.financeBusinessPartner.call(null),
-      dovFinanceBusinessPartner: StandardApprovers.dovFinanceBusinessPartner.call(null),
-      dovFinanceBusinessPartners: StandardApprovers.dovFinanceBusinessPartners.call(null),
-      hrBusinessPartner: StandardApprovers.hrBusinessPartner.call(null),
-      chiefAccountant: StandardApprovers.chiefAccountant.call(null),
-      chiefFinanceOfficer: StandardApprovers.chiefFinanceOfficer.call(null),
-      chiefComplianceOfficer: StandardApprovers.chiefComplianceOfficer.call(null),
-      chiefHumanCapitalOfficer: StandardApprovers.chiefHumanCapitalOfficer.call(null),
-      chiefMarketingOfficer: StandardApprovers.chiefMarketingOfficer.call(null),
-      chiefExecutiveOfficer: StandardApprovers.chiefExecutiveOfficer.call(null),
-      generalManager: StandardApprovers.generalManager.call(null),
-      generalDirector: StandardApprovers.generalDirector.call(null),
-      systemMasterData: StandardApprovers.systemMasterData.call(null),
-      legalEntityMasterData: StandardApprovers.legalEntityMasterData.call(null),
-      vendorMasterData: StandardApprovers.vendorMasterData.call(null),
-      customerMasterData: StandardApprovers.customerMasterData.call(null),
+      fxDirectManager: StandardApprovers.fxDirectManager,
+      fxDepartmentHead: StandardApprovers.fxDepartmentHead,
+      fxDOAManager: StandardApprovers.fxDOAManager,
+      fxDOAManagerExcludeDirectManager: StandardApprovers.fxDOAManagerExcludeDirectManager,
+      fxDOAManagers: StandardApprovers.fxDOAManagers,
+      fxDOAManagersExcludeDirectManager: StandardApprovers.fxDOAManagersExcludeDirectManager,
+      fxFinanceBusinessPartner: StandardApprovers.fxFinanceBusinessPartner,
+      fxDOVFinanceBusinessPartner: StandardApprovers.fxDOVFinanceBusinessPartner,
+      fxDOVFinanceBusinessPartners: StandardApprovers.fxDOVFinanceBusinessPartners,
+      fxHRBusinessPartner: StandardApprovers.fxHRBusinessPartner,
+      fxChiefAccountant: StandardApprovers.fxChiefAccountant,
+      fxChiefFinanceOfficer: StandardApprovers.fxChiefFinanceOfficer,
+      fxChiefComplianceOfficer: StandardApprovers.fxChiefComplianceOfficer,
+      fxChiefHumanCapitalOfficer: StandardApprovers.fxChiefHumanCapitalOfficer,
+      fxChiefMarketingOfficer: StandardApprovers.fxChiefMarketingOfficer,
+      fxChiefExecutiveOfficer: StandardApprovers.fxChiefExecutiveOfficer,
+      fxSystemMasterData: StandardApprovers.fxSystemMasterData,
+      fxLegalEntityMasterData: StandardApprovers.fxLegalEntityMasterData,
+      fxVendorMasterData: StandardApprovers.fxVendorMasterData,
+      fxCustomerMasterData: StandardApprovers.fxCustomerMasterData,
     }
 
     let approvalFunction = [];
     let tmp = '';
     const count = approvalItems.length;
     for (let i=0; i < count; i++ ){
-      tmp = standardApprovers[approvalItems[i].fx];
-      approvalFunction.push(tmp);
+      approvalFunction.push(standardApprovers[approvalItems[i].fx]);
     }
     // helperService.log(approvalFunction);
+
     return Promise.resolve(approvalFunction);
+  },
+
+  checkApprovalFLow: async(requestFlow, stimulatedFlow) => {
+
+    const tmpRequestFlow = requestFlow.map(item => item.username);
+    const tmpStimulatedFlow = stimulatedFlow.map(item => item.username);
+
+    console.log(tmpRequestFlow);
+    console.log(tmpStimulatedFlow);
+
+    console.log('In Both: ', helperService.inBoth(tmpRequestFlow, tmpStimulatedFlow));
+    console.log('In First Only: ', helperService.inFirstOnly(tmpRequestFlow, tmpStimulatedFlow));
+
+    const result = helperService.inSecondOnly(tmpRequestFlow, tmpStimulatedFlow)
+    console.log('In Second Only: ', result);
+
+    // const result = helperService.isEqual(tmpRequestFlow, tmpStimulatedFlow)
+    // console.log(result);
+
+    return Promise.resolve(!result.length);
+  },
+
+  executeFunction: async (fx: Function, params) => {
+
   },
 
   inviteApprover: async (req: express.Request, res: express.Response) => {
@@ -1241,7 +1535,7 @@ var GkRequestsController = {
           }
 
           const approvalLength = gkRequest.approval.length;
-          console.log(approvalLength, req.body.position);
+          // console.log(approvalLength, req.body.position);
           let newApproval = [];
 
           if (approvalLength > 0 ){
@@ -1253,7 +1547,16 @@ var GkRequestsController = {
           const updatedGkRequest = await gkRequest.save();
 
           if (updatedGkRequest) {
-            // Save update History
+            // TODO: Save the first history
+            const historyObject = {
+              "type" : "comment",
+              "docId" : updatedGkRequest._id,
+              "header" : "<a href='#'>" + req['mySession'].username + "</a> invite an approver!",
+              "body" : "Approver: " + JSON.stringify(invitedApprover),
+              "footer" : "",
+            }
+            let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+            helperService.log(createdHistory);
 
             const result = {
               data: updatedGkRequest['approval'],
@@ -1286,15 +1589,26 @@ var GkRequestsController = {
           return response.fail_notFound(res);
         } else {
           // helperService.log(req.body);
+          let removedApprover;
 
           if (gkRequest.approval.indexOf(req.body.sequence)) {
+            removedApprover = Object.assign({}, gkRequest.approval[req.body.sequence]);
             gkRequest.approval.splice(req.body.sequence, 1);
           }
 
           const updatedGkRequest = await gkRequest.save();
 
           if (updatedGkRequest) {
-            // Save update History
+            // TODO: Save the first history
+            const historyObject = {
+              "type" : "comment",
+              "docId" : updatedGkRequest._id,
+              "header" : "<a href='#'>" + req['mySession'].username + "</a> remove an approver!",
+              "body" : "Approver: " + JSON.stringify(removedApprover),
+              "footer" : "",
+            }
+            let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+            helperService.log(createdHistory);
 
             const result = {
               data: updatedGkRequest['approval'],
@@ -1380,7 +1694,7 @@ var GkRequestsController = {
         delete trackParams.newData.created_at;
 
         const diff = deep(trackParams.oldData, trackParams.newData);
-        helperService.log(diff);
+        // helperService.log(diff);
 
         history = {
           docId: id,
@@ -1401,7 +1715,7 @@ var GkRequestsController = {
           }]
         }
       }
-      helperService.log(history);
+      // helperService.log(history);
 
       let gkRequestHistory = new GkRequestHistory(history);
 

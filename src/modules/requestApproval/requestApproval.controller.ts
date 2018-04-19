@@ -23,157 +23,118 @@ var StandardApprovers = require('./standardApprovers');
 var RequestApprovalController = {
   getModel: async (req: express.Request, res: express.Response) => {
     return DBConnect.connectSystemDB(req, res, 'RequestApproval', RequestApprovalSchema);
-    // try {
-    //   const systemDbUri = ConstantsBase.urlSystemDb;
-    //   const systemDb = await mongoose.createConnection(
-    //     systemDbUri,
-    //     {
-    //       useMongoClient: true,
-    //       promiseLibrary: require("bluebird")
-    //     }
-    //   );
-    //   return systemDb.model('RequestApproval', RequestApprovalSchema);
-    // }
-    // catch (err) {
-    //   err['data'] = 'Error in connecting server and create collection model!';
-    // }
   },
 
   getHistoryModel: async (req: express.Request, res: express.Response) => {
     return DBConnect.connectSystemDB(req, res, 'RequestApprovalHistory', RequestApprovalHistorySchema);
-    // try {
-    //   const systemDbUri = ConstantsBase.urlSystemDb;
-    //   const systemDb = await mongoose.createConnection(
-    //     systemDbUri,
-    //     {
-    //       useMongoClient: true,
-    //       promiseLibrary: require("bluebird")
-    //     }
-    //   );
-    //   return systemDb.model('RequestApprovalHistory', RequestApprovalHistorySchema);
-    // }
-    // catch (err) {
-    //   err['data'] = 'Error in connecting server and create collection model!';
-    // }
   },
 
   findStandardApprovalItems: async (req: express.Request, res: express.Response) => {
     const standardApprovalItems = [
       // Management by function and by DOA
       {
-        fx: 'directManager',
+        fx: 'fxDirectManager',
         desc: 'Direct Manager',
         type: 'one',
       },
       {
-        fx: 'departmentHead',
+        fx: 'fxDepartmentHead',
         desc: 'Department Head',
         type: 'one',
       },
       {
-        fx: 'doaManager',
+        fx: 'fxDOAManager',
         desc: 'DOA Manager',
-        type: 'many'
+        type: 'one'
       },
       {
-        fx: 'doaManagerExcludeDirectManager',
+        fx: 'fxDOAManagerExcludeDirectManager',
         desc: 'DOA Manager (upper D. Manager)',
-        type: 'many'
+        type: 'one'
       },
       {
-        fx: 'doaManagers',
+        fx: 'fxDOAManagers',
         desc: 'DOA Managers',
         type: 'many'
       },
       {
-        fx: 'doaManagersExcludeDirectManager',
+        fx: 'fxDOAManagersExcludeDirectManager',
         desc: 'DOA Managers (upper D. Manager)',
         type: 'many'
       },
 
       // Business Partner by function and by DOV
       {
-        fx: 'financeBusinessPartner',
+        fx: 'fxFinanceBusinessPartner',
         desc: 'Finance Business Partner',
         type: 'one',
       },
       {
-        fx: 'dovFinanceBusinessPartner',
+        fx: 'fxDOVFinanceBusinessPartner',
         desc: 'DOV Finance Business Partner',
         type: 'one',
       },
       {
-        fx: 'dovFinanceBusinessPartners',
+        fx: 'fxDOVFinanceBusinessPartners',
         desc: 'DOV Finance Business Partners',
-        type: 'one',
+        type: 'many',
       },
 
       {
-        fx: 'hrBusinessPartner',
+        fx: 'fxHRBusinessPartner',
         desc: 'HR Business Partner',
         type: 'one',
       },
 
       // Fixed position
       {
-        fx: 'chiefAccountant',
+        fx: 'fxChiefAccountant',
         desc: 'Chief Accountant',
-        type: 'many',
+        type: 'one',
       },
       {
-        fx: 'chiefFinanceOfficer',
+        fx: 'fxChiefFinanceOfficer',
         desc: 'Chief Finance Officer',
         type: 'one',
       },
       {
-        fx: 'chiefComplianceOfficer',
+        fx: 'fxChiefComplianceOfficer',
         desc: 'Chief Compliance Officer',
         type: 'one',
       },
       {
-        fx: 'chiefHumanCapitalOfficer',
+        fx: 'fxChiefHumanCapitalOfficer',
         desc: 'Chief Human Capital Officer',
-        type: 'many',
+        type: 'one',
       },
       {
-        fx: 'chiefMarketingOfficer',
+        fx: 'fxChiefMarketingOfficer',
         desc: 'Chief Marketing Officer',
         type: 'one',
       },
       {
-        fx: 'chiefExecutiveOfficer',
+        fx: 'fxChiefExecutiveOfficer',
         desc: 'Chief Executive Officer',
         type: 'one',
       },
-      {
-        fx: 'generalManager',
-        desc: 'General Manager',
-        type: 'one',
-      },
-      {
-        fx: 'generalDirector',
-        desc: 'General Director',
-        type: 'one',
-      },
-
       // Functionality
       {
-        fx: 'systemMasterData',
+        fx: 'fxSystemMasterData',
         desc: 'System MD Officer',
         type: 'one',
       },
       {
-        fx: 'legalEntityMasterData',
+        fx: 'fxLegalEntityMasterData',
         desc: 'Legal Entity MD Officer',
         type: 'one',
       },
       {
-        fx: 'vendorMasterData',
+        fx: 'fxVendorMasterData',
         desc: 'Vendor MD Officer',
         type: 'one',
       },
       {
-        fx: 'customerMasterData',
+        fx: 'fxCustomerMasterData',
         desc: 'Customer MD Officer',
         type: 'one',
       }
@@ -199,10 +160,11 @@ var RequestApprovalController = {
         let RequestApproval = await RequestApprovalController.getModel(req, res);
         let requestApproval = await RequestApproval.find({
           tcode: req.params._id,
-          status1: 'Active',
-          status2: 'Unmarked'
-        }).select('_id desc items');
-        console.log(requestApproval);
+          // status1: 'Active',
+          // status2: 'Unmarked'
+        }).select('_id desc items status1 status2');
+        // console.log(requestApproval);
+
         if (!requestApproval) {
           return response.fail_notFound(res);
         } else {
@@ -235,185 +197,8 @@ var RequestApprovalController = {
     //       },
     //     ],
     //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'A12',
-    //     desc: 'GKCLN31 | Fast Track',
-    //     items: [
-    //       {
-    //         fx: 'finance_business_partner',
-    //         desc: 'Finance Business Partner',
-    //         type: 'one',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'A13',
-    //     desc: 'GKCLN31 | Exception',
-    //     items: [
-    //       {
-    //         fx: 'chief_accountant',
-    //         desc: 'Chief Accountant',
-    //         type: 'many',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'B11',
-    //     desc: 'GKCLN33 | Standard',
-    //     items: [
-    //       {
-    //         fx: 'cho',
-    //         desc: 'Chief Human Officer',
-    //         type: 'many',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'B12',
-    //     desc: 'GKCLN33 | Fast Track',
-    //     items: [
-    //       {
-    //         fx: 'vendor_master_data',
-    //         desc: 'Vendor MD Officer',
-    //         type: 'many',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'B13',
-    //     desc: 'GKCLN33 | Exception',
-    //     items: [
-    //       {
-    //         fx: 'cmo',
-    //         desc: 'Chief Marketing Officer',
-    //         type: 'one',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
+    //   }
     // ];
-    //
-    // const result = {
-    //   message: '',
-    //   data: sample,
-    //   total: sample.length
-    // }
-    // return response.ok(res, result);
-  },
-
-  apiGetApprovalTypesListByTcode: async (req: express.Request, res: express.Response) => {
-    try {
-      if (!req.params._id) {
-        const result = {
-          message: `${req.params._id} is required!`,
-        }
-        return response.fail_badRequest(res, result);
-
-      } else {
-        let RequestApproval = await RequestApprovalController.getModel(req, res);
-        let requestApproval = await RequestApproval.find({
-          tcode: req.params._id,
-          status1: 'Active',
-          status2: 'Unmarked'
-        }).select('_id desc items');
-
-        console.log(requestApproval);
-        if (!requestApproval) {
-          return response.fail_notFound(res);
-        } else {
-          const result = {
-            message: '',
-            data: requestApproval,
-            total: requestApproval.length
-          }
-          return response.ok(res, result);
-        }
-      }
-    }
-    catch (err) {
-      response.fail_serverError(res, err);
-    }
-
-    // const sample = [
-    //   { _id: 'A11',
-    //     desc: 'GKCLN31 | Standard',
-    //     items: [
-    //       {
-    //         fx: 'direct_manager',
-    //         desc: 'Direct Manager',
-    //         type: 'one',
-    //       },
-    //       {
-    //         fx: 'cfo',
-    //         desc: 'Chief Finance Officer',
-    //         type: 'many',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'A12',
-    //     desc: 'GKCLN31 | Fast Track',
-    //     items: [
-    //       {
-    //         fx: 'finance_business_partner',
-    //         desc: 'Finance Business Partner',
-    //         type: 'one',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'A13',
-    //     desc: 'GKCLN31 | Exception',
-    //     items: [
-    //       {
-    //         fx: 'chief_accountant',
-    //         desc: 'Chief Accountant',
-    //         type: 'many',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'B11',
-    //     desc: 'GKCLN33 | Standard',
-    //     items: [
-    //       {
-    //         fx: 'cho',
-    //         desc: 'Chief Human Officer',
-    //         type: 'many',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'B12',
-    //     desc: 'GKCLN33 | Fast Track',
-    //     items: [
-    //       {
-    //         fx: 'vendor_master_data',
-    //         desc: 'Vendor MD Officer',
-    //         type: 'many',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    //   { _id: 'B13',
-    //     desc: 'GKCLN33 | Exception',
-    //     items: [
-    //       {
-    //         fx: 'cmo',
-    //         desc: 'Chief Marketing Officer',
-    //         type: 'one',
-    //       },
-    //     ],
-    //     status1: 'Active', status2: 'Marked', tcode: 'gkcln31'
-    //   },
-    // ];
-    //
-    // const result = {
-    //   message: '',
-    //   data: sample,
-    //   total: sample.length
-    // }
-    // return response.ok(res, result);
   },
 
   createApprovalType: async (req: express.Request, res: express.Response) => {
@@ -461,7 +246,7 @@ var RequestApprovalController = {
         let RequestApproval = await RequestApprovalController.getModel(req, res);
         let approvalType = await RequestApproval.findById(req.params._id);
 
-        console.log(approvalType);
+        // console.log(approvalType);
         if (!approvalType) {
           return response.fail_notFound(res);
         } else {
@@ -510,7 +295,7 @@ var RequestApprovalController = {
       } else {
         let RequestApproval = await RequestApprovalController.getModel(req, res);
         let requestApproval = await RequestApproval.findById(req.params._id);
-        console.log(requestApproval);
+        // console.log(requestApproval);
         if (!requestApproval) {
           return response.fail_notFound(res);
         } else {
@@ -653,7 +438,7 @@ var RequestApprovalController = {
       delete trackParams.newData.created_at;
 
       const diff = deep(trackParams.oldData, trackParams.newData);
-      console.log(diff);
+      // console.log(diff);
 
       history = {
         docId: id,
@@ -662,7 +447,7 @@ var RequestApprovalController = {
         diff: diff
       }
 
-      console.log(history);
+      // console.log(history);
 
       let requestApprovalHistory = new RequestApprovalHistory(history);
 

@@ -37,6 +37,16 @@ var GkRequestSchema = new Schema ({
   updated_at: Date,
 }, { collection: 'requests' });
 
+// {
+//   type: String,
+//   username: String,
+//   fullname: String,
+//   step: String,
+//   comment: String,
+//   decision: String,
+//   decided_at: String
+// }
+
 //IMPORTANT: Can not use arrow function here to ensure rebindable
 GkRequestSchema.pre('save', function (next) {
   let currentDate = new Date();

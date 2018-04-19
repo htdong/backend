@@ -25,6 +25,9 @@ const MessagesRoutes = require('../../modules/message/messages.route');
 const NotificationsRoutes = require('../../modules/notification/notifications.route');
 const RequestApproval = require('../../modules/requestApproval/requestApproval.route');
 const RequestFile = require('../../modules/requestFiles/requestFiles.route');
+const RequestComment = require('../../modules/requestComments/requestComments.route');
+const RequestHistory = require('../../modules/requestHistories/requestHistories.route');
+
 const UsersRoutes = require('../../modules/users/users.route');
 const SessionRoutes = require('../../modules/session/session.route');
 
@@ -51,6 +54,8 @@ var routes = function() {
   app.use("/notifications", NotificationsRoutes);
   app.use("/requestApproval", RequestApproval);
   app.use("/requestFiles", RequestFile);
+  app.use("/requestComments", RequestComment);
+  app.use("/requestHistories", RequestHistory);
 
   app.use("/settings", SessionRoutes);
   app.use("/users", UsersRoutes);

@@ -20,6 +20,7 @@ var RequestFileSchema = require('./requestFile.schema');
 var RequestFileHistorySchema = require('./requestFile.history.schema');
 
 var notificationsController = require('../../modules/notification/notifications.controller');
+var requestHistoriesController = require('../requestHistories/requestHistories.controller');
 
 var RequestFilesController = {
 
@@ -42,7 +43,7 @@ var RequestFilesController = {
       } else {
         let RequestFiles = await RequestFilesController.getModel(req, res);
         let requestFiles = await RequestFiles.find({docId: req.params._id});
-        console.log(requestFiles);
+        // console.log(requestFiles);
         if (!requestFiles) {
           return response.fail_notFound(res);
         } else {
@@ -72,9 +73,9 @@ var RequestFilesController = {
         }
         return response.fail_badRequest(res, result);
       } else {
-        console.log(req.params._id);
-        console.log('body:', req.body);
-        console.log('files:', req['files']);
+        // console.log(req.params._id);
+        // console.log('body:', req.body);
+        // console.log('files:', req['files']);
 
         let uploadStatus = await fileService.uploadRequestDocument(req, res);
 
@@ -93,11 +94,21 @@ var RequestFilesController = {
         //   username: req['mySession'].username,
         //   status: 'Unmarked'
         // });
-        console.log(requestFiles);
+        // console.log(requestFiles);
 
         let createdFile = await requestFiles.save();
+        // console.log(createdFile);
 
-        console.log(createdFile);
+        // TODO: Save the first history
+        const historyObject = {
+          "type" : "comment",
+          "docId" : req.params._id,
+          "header" : "<a href='#'>" + req['mySession'].username + "</a> upload a file!",
+          "body" : "Filename: " + data.originalname,
+          "footer" : "",
+        }
+        let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+        helperService.log(createdHistory);
 
         const result = {
           message: 'Creation completed!',
@@ -130,11 +141,11 @@ var RequestFilesController = {
         if (!requestFiles) {
           return response.fail_notFound(res);
         } else {
-          console.log('Generate temporary file for download');
+          // console.log('Generate temporary file for download');
 
           let originalname = await fileService.downloadRequestDocument(req, res, requestFiles);
 
-          helperService.log(req.body);
+          // helperService.log(req.body);
 
           // specify tcode of download
           // dl = download
@@ -155,7 +166,7 @@ var RequestFilesController = {
             isMark: true
           }
 
-          helperService.log(notification);
+          // helperService.log(notification);
 
           let notificationResult = await notificationsController.module11(req, res, notification);
 
@@ -191,8 +202,20 @@ var RequestFilesController = {
           return response.fail_notFound(res);
         } else {
           // console.log(req.body);
+          const originalName = requestFile.desc;
           requestFile.desc = req.body.desc;
           let updatedFile = await requestFile.save();
+
+          // TODO: Save the first history
+          const historyObject = {
+            "type" : "comment",
+            "docId" : requestFile.docId,
+            "header" : "<a href='#'>" + req['mySession'].username + "</a> rename a file!",
+            "body" : "Original name: " + originalName + ". New name: " + req.body.desc,
+            "footer" : "",
+          }
+          let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+          helperService.log(createdHistory);
 
           if (updatedFile) {
             const result = {
@@ -243,6 +266,18 @@ var RequestFilesController = {
               break;
           }
           let updatedFile = await requestFile.save();
+
+          // TODO: Save the first history
+          const historyObject = {
+            "type" : "comment",
+            "docId" : requestFile.docId,
+            "header" : "<a href='#'>" + req['mySession'].username + "</a> patch a file!",
+            "body" : "Patch action: " + patchType,
+            "footer" : "",
+          }
+          let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+          helperService.log(createdHistory);
+
           if (updatedFile) {
             const result = {
               data: updatedFile,
@@ -296,6 +331,17 @@ var RequestFilesController = {
               // }
               // let trackHistory = GkClientsController.trackHistory(req, res, trackParams);
 
+              // TODO: Save the first history
+              const historyObject = {
+                "type" : "comment",
+                "docId" : removedFile.docId,
+                "header" : "<a href='#'>" + req['mySession'].username + "</a> remove a file!",
+                "body" : "File info: " + JSON.stringify(removedFile),
+                "footer" : "",
+              }
+              let createdHistory = await requestHistoriesController.module11(req, res, historyObject);
+              helperService.log(createdHistory);
+              
               const result = {
                 data: removedFile,
               }

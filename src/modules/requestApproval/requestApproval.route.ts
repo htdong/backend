@@ -10,7 +10,6 @@ router.get("/items", RequestApprovalController.findStandardApprovalItems);
 
 // APPROVAL TYPES
 router.get("/types/:_id", RequestApprovalController.findApprovalTypesByTcode);
-router.get("/types/api/:_id", RequestApprovalController.apiGetApprovalTypesListByTcode);
 
 router.post("/types", RequestApprovalController.createApprovalType);
 

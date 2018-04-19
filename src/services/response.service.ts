@@ -34,7 +34,7 @@ module.exports.ok = function (res, result) {
 		data: result.data || {},
 	};
 	console.log('RESPONSE 200:');
-	helper.log(response);
+	// helper.log(response);
 	return res.status(200).json(response);
 };
 
@@ -44,7 +44,7 @@ module.exports.ok_pagination = function (res, result) {
 	  total: result.total || 0
 	};
 	console.log('RESPONSE 200:');
-	helper.log(response);
+	// helper.log(response);
 	return res.status(200).json(response);
 };
 
@@ -54,7 +54,7 @@ module.exports.ok_message = function (res, result) {
 		data: result.data || {}
 	};
 	helper.log(response);
-	console.log('RESPONSE 200:');
+	// console.log('RESPONSE 200:');
 	return res.status(200).json(response);
 };
 
