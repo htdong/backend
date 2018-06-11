@@ -1,9 +1,10 @@
-console.log('   /...Loading [UsersRoutes]');
+console.log('...Loading [UsersRoutes]');
 
-var express = require("express");
-var UsersController = require('./users.controller');
+import * as express from 'express';
 
-var router = express.Router();
+const UsersController = require('./users.controller');
+
+const router = express.Router();
 
 // ROUTES
 // IMPORTANT: Routes sequence is important as /:id could cover other get /xxx thus put at last
@@ -24,9 +25,6 @@ router.get("/controls", UsersController.lazyDataForFormControl);
 router.get("/controls/list", UsersController.listDataForFormControl);
 // router.get("/:_id", GkClientsController.module12);
 // router.get("/:_id/changes", GkClientsController.module19);
-
-// Deprecated
-// router.get("/apiListPagination", UsersController.findAPIListPagination);
 
 // POST
 // router.post("/entry", GkClientsController.module11);

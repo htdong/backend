@@ -1,48 +1,316 @@
-import express = require("express");
+import * as express from 'express';
 Promise = require("bluebird");
-var fs = require("fs");
-var json2csv = require('json2csv');
-var fastCSV = require('fast-csv');
-var deep = require('deep-diff').diff;
+const fs = require("fs");
+const json2csv = require('json2csv');
+const fastCSV = require('fast-csv');
+const deep = require('deep-diff').diff;
 
-var nodemailer = require('nodemailer');
+import * as nodemailer from 'nodemailer';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcryptjs';
 
-var mongoose = require("mongoose");
-var ObjectId = require('mongodb').ObjectID;
+var mongoose =require('mongoose');
+const ObjectId = require('mongodb').ObjectID;
 mongoose.Promise = require("bluebird");
 
-var ConstantsBase = require('../../config/base/constants.base');
-var DBConnect = require('../../services/dbConnect.service');
-var fileService = require('../../services/files.service');
-var helperService = require('../../services/helper.service');
-var mailService = require('../../services/mail.service');
-var passwordService = require('../../services/password.service');
-var response = require('../../services/response.service');
-var simpleHash = require('../../services/simpleHash.service');
+const DBConnect = require('../../services/dbConnect.service');
+const fileService = require('../../services/files.service');
+const helperService = require('../../services/helper.service');
+const mailService = require('../../services/mail.service');
+const passwordService = require('../../services/password.service');
+const response = require('../../services/response.service');
+const simpleHash = require('../../services/simpleHash.service');
 
 // import { log } from "util";
 
-var UserSchema = require('./user.schema');
-var UserHistorySchema = require('./user.history.schema');
+const UserSchema = require('./user.schema');
+const UserHistorySchema = require('./user.history.schema');
 
-var GkClientsController = require('../gkClients/gkClients.controller');
-var GkClientSchema = require('../gkClients/gkClient.schema');
+const GkClientsController = require('../gkClients/gkClients.controller');
+const GkClientSchema = require('../gkClients/gkClient.schema');
 
 /**
  * USER CONTROLLER
  *
- * @function ***
+ * @function getModel
  *
  * @function authenticate
  * @function register
  * @function forgot
  *
- * @function getModel
- * @function getHistoryModel
+ * @function ***
  */
-var UsersController = {
+const UsersController = {
+
+  getModel: async (req: express.Request, res: express.Response, clientDb) => {
+    return DBConnect.connectMasterDB(req, res, 'User', UserSchema, clientDb);
+  },
+
+  /**
+  * @function authenticate
+  * Authenticate an user via (token), (email), (password)
+  *
+  * Steps:
+  * [01] Validate inputs
+  * [02] Connect systemDb to get gkClient via (token)
+  * [03] Connect masterDb of gkClient to get user via (email)
+  * [04] Authorize user via (password)
+  * [05] Save session
+  */
+  authenticate: async (req: express.Request, res: express.Response) => {
+    try {
+      /* 01 */
+      req.assert('email', 'Email is not valid').isEmail();
+      req.assert('password', 'Password cannot be blank').notEmpty();
+      req.sanitize('email').normalizeEmail({ gmail_remove_dots: false });
+
+      const errors = req.validationErrors();
+
+      if (errors || !mongoose.Types.ObjectId.isValid(req.body.token)) {
+        req['myResult'] = {
+          code: 412,
+          message: 'Invalid inputs',
+          data: [errors, `${req.body.token} is invalid token!`]
+        }
+        return response.done(req, res);
+      }
+
+      /* 02 */
+      let GkClient = await GkClientsController.getModel(req, res);
+      let client = await GkClient.findById(req.body.token);
+
+      if (!client) { return response.fail_notFound(res); }
+      // helperService.log(client);
+
+      /* 03 */
+      let User = await UsersController.getModel(req, res, client['clientDb']);
+      let user = await User.findOne({ email: req.body.email});
+
+      if (!user) { return response.fail_notFound(res); }
+      // helperService.log(user);
+
+      /* 04 */
+      const keyPassword = bcrypt.compareSync(req.body.password, user['hash']);
+      const resetPassword = bcrypt.compareSync(req.body.password, user['resetHash']);
+      const resetDate = new Date() < user['resetHashExpiry'];
+      console.log(keyPassword, resetPassword, resetDate);
+
+      if (keyPassword || (resetPassword && resetDate)) {
+        // Generate JWT / AWT / Client and Sever session data
+        const token = jwt.sign({ sub: user._id }, process.env.JWT_SECRET);
+
+        const defaultLge = user.defaultLge || '';
+
+        const awt = simpleHash.encode_array([
+          defaultLge,
+          new Date().getFullYear().toString(),
+        ]);
+
+        const encodedTcodes = simpleHash.encode_array(user.tcodes.sort());
+
+        // data to pass back to frontend client
+        const data = {
+          _id:        user._id,
+          email:      user.email,
+          token:      token,
+
+          name:       user['name'],
+          avatar:     user.avatar,
+          gravatar:   user.gravatar(),
+
+          awt:        awt,
+          wklge:      user.defaultLge,
+          wkyear:     new Date().getFullYear().toString(),
+          lges:       user.lges,
+
+          setting:    client.setting,
+          tcodes:     encodedTcodes
+        }
+        // helperService.log(data);
+
+        /* 05 */
+        // session to be stored for later use at backend server
+        req['mySession'] = {
+          _id:      user._id,
+          email:    user.email,
+
+          clientId: req.body.token,
+          clientDb: client.clientDb,
+
+          wklge:    user.defaultLge,
+          wkyear:   new Date().getFullYear().toString(),
+
+          directmanager: user.directmanager,
+          department: user.department,
+
+          setting:  client.setting,
+          tcodes:   user.tcodes.sort(),
+        }
+        let sessionController = require('../session/session.controller');
+        sessionController.set(req, res);
+        // helperService.log(req['mySession']);
+
+        return res.send(data);
+      }
+      else {
+        return response.fail_unauthorized(res);
+      } // End valid password
+    }
+    catch (err) {
+      return response.fail_serverError(res, err);
+    }
+  },
+
+  /**
+  * @function register
+  * Register an user (token), (email) and (password)
+  *
+  * Steps:
+  * [01] Validate inputs
+  * [02] Connect systemDb to get gkClient via (token)
+  * [03] Connect masterDb of gkClient to check existence of new user via (email)
+  * [04] Save new user (email, password)
+  */
+  register: async (req: express.Request, res: express.Response) => {
+    try {
+      /* 01 */
+      req.assert('email', 'Email is not valid').isEmail();
+      req.assert('password', 'Password cannot be blank').notEmpty();
+      req.sanitize('email').normalizeEmail({ gmail_remove_dots: false });
+
+      const errors = req.validationErrors();
+
+      if (errors || !mongoose.Types.ObjectId.isValid(req.body.token)) {
+        req['myResult'] = {
+          code: 412,
+          message: 'Invalid inputs',
+          data: [errors, `${req.body.token} is invalid token!`]
+        }
+        return response.done(req, res);
+      }
+
+      /* 02 */
+      let GkClient = await GkClientsController.getModel(req, res);
+      let client = await GkClient.findById(req.body.token);
+
+      if (!client) { return response.fail_notFound(res); }
+
+      /* 03 */
+      let User = await UsersController.getModel(req, res, client['clientDb']);
+      let users = await User.find({ email: req.body.email });
+      helperService.log(users);
+
+      if (users.length > 0) {
+        req['myResult'] = {
+          code: 412,
+          message: 'User is already exist!'
+        }
+        return response.done(req, res);
+      } else {
+
+        /* 04 */
+        // Do not use below standard way as hash is initialized and required
+        const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+        const hashedPasswordExpiry = new Date();
+        hashedPasswordExpiry.setDate(hashedPasswordExpiry.getDate() - 1);
+
+        const newUser = {
+          email: req.body.email,
+          avatar : "default.png",
+          hash: hashedPassword,
+          resetHash: hashedPassword,
+          resetHashExpiry: hashedPasswordExpiry,
+          status1: 'Active',
+          status2: 'Unmarked'
+        }
+
+        let clientUser = new User(newUser);
+        let result = await clientUser.save();
+
+        return response.ok(res, {message: 'Completed!'});
+      }
+    }
+    catch (err) {
+      return response.fail_serverError(res, err);
+    }
+  },
+
+  /**
+  * @function forgot
+  * Reset password
+  *
+  * [01] Validate token
+  * [02] Connect systemDb
+  * [03] Get gkClient
+  * [04] Connect masterDb of gkClient
+  * [05] Get user of gkClient by username
+  * [06] Save random password to user
+  * [07] Reset password of user by sending new password to user email
+  */
+  forgot: async (req: express.Request, res: express.Response) => {
+    try {
+      /* 01 */
+      req.assert('email', 'Email is not valid').isEmail();
+      req.sanitize('email').normalizeEmail({ gmail_remove_dots: false });
+
+      const errors = req.validationErrors();
+
+      if (errors || !mongoose.Types.ObjectId.isValid(req.body.token)) {
+        req['myResult'] = {
+          code: 412,
+          message: 'Invalid inputs',
+          data: [errors, `${req.body.token} is invalid token!`]
+        }
+        return response.done(req, res);
+      }
+
+      /* 02 */
+      let GkClient = await GkClientsController.getModel(req, res);
+      let client = await GkClient.findById(req.body.token);
+
+      if (!client) { return response.fail_notFound(res); }
+
+      let User = await UsersController.getModel(req, res, client['clientDb']);
+      let user = await User.findOne({ email: req.body.email});
+      // console.log('Users: ', users);
+
+      if (!user) { return response.fail_notFound(res); }
+
+      let tempPassword = passwordService.generate();
+      // console.log(tempPassword);
+
+      // user.hash = bcrypt.hashSync(tempPassword, 10);
+      user.resetHash = bcrypt.hashSync(tempPassword, 10);
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      user.resetHashExpiry = tomorrow;
+
+      let modifiedUser = await user.save();
+
+      const mailContent = {
+        subject: 'Forgot password request!',
+        from: 'GK|BPS',
+        textMessage: `Your reset password is: ${tempPassword}, valid until ${tomorrow}`, // plain text body
+        htmlMessage: `<b>Your reset password is:</b> <i>${tempPassword}<i>, valid until <i>${tomorrow}</i>`,  // html body
+        to: modifiedUser.email
+      }
+      // helperService.log(mailContent);
+
+      let result = await mailService.send(res, mailContent);
+
+      if (result.status == 200) {
+        return response.ok(res, {});
+      } else {
+        return response.fail_serverError(res, result);
+      }
+
+    }
+    catch (err) {
+      return response.fail_serverError(res, err);
+    }
+  },
 
   /**
   * @function module1x
@@ -190,260 +458,7 @@ var UsersController = {
     }
   },
 
-  /**
-  * @function authenticate
-  * Authenticate an user via (token), (username), (password)
-  *
-  * Steps:
-  * [01] Validate token
-  * [02] Connect systemDb
-  * [03] Get gkClient
-  * [04] Connect masterDb of gkClient
-  * [05] Get user of gkClient by username
-  * [06] Authorize user of gkClient by password
-  */
-  authenticate: async (req: express.Request, res: express.Response) => {
-    try {
-      // console.log('Token: ', req.body.token);
-      if (!mongoose.Types.ObjectId.isValid(req.body.token)) {
-        const result = {
-          message: `${req.body.token} is invalid token!`,
-        }
-        return response.fail_badRequest(res, result);
-      }
-      else {
-        let GkClient = await GkClientsController.getModel(req, res);
-        let client = await GkClient.findById(req.body.token);
-        // helperService.log(client);
 
-        if (!client) {
-          return response.fail_notFound(res);
-        } else {
-          let User = await UsersController.getModel(req, res, client['clientDb']);
-          let users = await User.find({ username: req.body.username});
-          // helperService.log(users);
-
-          if (users.length == 0) {
-            return response.fail_notFound(res);
-          }
-          else {
-            let clientUser = users[0];
-
-            if (!bcrypt.compareSync(req.body.password, clientUser.hash)) {
-              return response.fail_unauthorized(res);
-            }
-            else {
-              console.log('Hash validation: Matched');
-
-              // Generate JWT / AWT / Client and Sever session data
-              const token = jwt.sign({ sub: clientUser._id }, ConstantsBase.secret);
-              const defaultLge = clientUser.defaultLge || '';
-              const awt = simpleHash.encode_array([
-                defaultLge,
-                new Date().getFullYear().toString(),
-              ]);
-              const encodedTcodes = simpleHash.encode_array(clientUser.tcodes.sort());
-
-              // data to pass back to frontend client
-              const data = {
-                _id:        clientUser._id,
-                username:   clientUser.username,
-                firstName:  clientUser.firstname,
-                lastName:   clientUser.lastname,
-                fullname:   clientUser.fullname,
-                title:      clientUser.title,
-                avatar:     clientUser.avatar,
-                token:      token,
-                awt:        awt,
-                wklge:      clientUser.defaultLge,
-                wkyear:     new Date().getFullYear().toString(),
-                lges:       clientUser.lges,
-                status:     clientUser.status,
-                setting:    client.setting,
-                tcodes:     encodedTcodes
-              }
-              // helperService.log(data);
-
-              // session to be stored for later use at backend server
-              req['mySession'] = {
-                _id:      clientUser._id,
-                username: clientUser.username,
-                fullname: clientUser.fullname,
-                avatar: clientUser.avatar,
-
-                clientId: req.body.token,
-                clientDb: client.clientDb,
-                
-                wklge:    clientUser.defaultLge,
-                wkyear:   new Date().getFullYear().toString(),
-
-                directmanager: clientUser.directmanager,
-                department: clientUser.department,
-
-                setting:  client.setting,
-                tcodes:   clientUser.tcodes.sort(),
-              }
-              helperService.log(req['mySession']);
-
-              // session to be stored for later use at backend server
-              let sessionController = require('../session/session.controller');
-              await sessionController.set(req, res);
-
-              return res.send(data);
-
-            } // End valid passwork
-          } // End existed users
-        } // End existed client
-      } // End validated token
-    }
-    catch (err) {
-      return response.fail_serverError(res, err);
-    }
-  },
-
-  /**
-  * @function register
-  * Register an user
-  *
-  * Steps:
-  * [01] Validate token
-  * [02] Connect systemDb
-  * [03] Get gkClient
-  * [04] Connect masterDb of gkClient
-  * [05] Register new user of gkClient
-  */
-  register: async (req: express.Request, res: express.Response) => {
-    try {
-      // console.log('Token: ', req.body.token);
-      if (!mongoose.Types.ObjectId.isValid(req.body.token)) {
-        const result = {
-          message: `${req.body.token} is invalid token!`,
-        }
-        return response.fail_badRequest(res, result);
-      }
-      else {
-        let GkClient = await GkClientsController.getModel(req, res);
-        let client = await GkClient.findById(req.body.token);
-        // console.log('Client', client);
-
-        if (!client) {
-          return response.fail_notFound(res);
-        } else {
-          let User = await UsersController.getModel(req, res, client['clientDb']);
-
-          let users = await User.find({
-            $or: [
-              { username: req.body.username },
-              { email: req.body.email },
-            ]
-          });
-
-          console.log('Users: ', users);
-          if (users.length) {
-            return response.fail_preCondition(res,{message: 'User already exist!'});
-          }
-          else {
-            // Do not use below standard way as hash is initialized and required
-            // clientUser = new User(req.body);
-
-            const tempUser = {
-              firstname: req.body.firstname,
-              lastname: req.body.lastname,
-              fullname: req.body.lastname + ' ' + req.body.firstname,
-              username: req.body.username,
-              avatar : "default.png",
-              hash: bcrypt.hashSync(req.body.password, 10),
-              email: req.body.email,
-              status1: 'Active',
-              status2: 'Unmarked'
-            }
-            let clientUser = new User(tempUser);
-            let result = await clientUser.save();
-
-            return response.ok(res, {message: 'Completed!'});
-
-          } // End no duplication of username
-        } // End existed client
-      } // End validated token
-    }
-    catch (err) {
-      return response.fail_serverError(res, err);
-    }
-  },
-
-  /**
-  * @function forgot
-  * Reset password
-  *
-  * [01] Validate token
-  * [02] Connect systemDb
-  * [03] Get gkClient
-  * [04] Connect masterDb of gkClient
-  * [05] Get user of gkClient by username
-  * [06] Save random password to user
-  * [07] Reset password of user by sending new password to user email
-  */
-  forgot: async (req: express.Request, res: express.Response) => {
-    try {
-      // console.log('Token: ', req.body.token);
-      if (!mongoose.Types.ObjectId.isValid(req.body.token)) {
-        const result = {
-          message: `${req.body.token} is invalid token!`,
-        }
-        return response.fail_badRequest(res, result);
-      }
-      else {
-        let GkClient = await GkClientsController.getModel(req, res);
-        let client = await GkClient.findById(req.body.token);
-        // console.log('Client', client);
-
-        if (!client) {
-          return response.fail_notFound(res);
-        } else {
-          let User = await UsersController.getModel(req, res, client['clientDb']);
-          let users = await User.find({ email: req.body.email});
-          // console.log('Users: ', users);
-
-          if (users.length == 0) {
-            return response.fail_notFound(res);
-          }
-          else {
-            let tempUser = users[0];
-            // console.log('Users[0]: ', tempUser);
-
-            let tempPassword = passwordService.generate();
-            // console.log(tempPassword);
-
-            tempUser.hash = bcrypt.hashSync(tempPassword, 10);
-            // console.log('Temp User: ', tempUser);
-
-            let savedUser = await new User(tempUser).save();
-            // console.log('Saved User: ', savedUser);
-
-            const mailContent = {
-              subject: 'Forgot password request!',
-              from: 'GK|BPS',
-              textMessage: `Your new password is: ${tempPassword}`, // plain text body
-              htmlMessage: `<b>Your new password is: <i>${tempPassword}<i></b>`,  // html body
-              to: savedUser.email
-            }
-            // helperService.log(mailContent);
-
-            let result = await mailService.send(res, mailContent);
-
-            if (result.status == 200) {
-              return response.ok(res, {});
-            } else {
-              return response.fail_serverError(res, result);
-            }
-          } // End no duplication of username
-        } // End existed client
-      } // End validated token
-    }
-    catch (err) {
-      return response.fail_serverError(res, err);
-    }
-  },
 
   // findAPIListPagination: async (req: express.Request, res: express.Response) => {
   //   try {
@@ -489,28 +504,6 @@ var UsersController = {
   //   }
   // },
 
-
-  getModel: async (req: express.Request, res: express.Response, clientDb) => {
-    return DBConnect.connectMasterDB(req, res, 'User', UserSchema, clientDb);
-  },
-
-  getHistoryModel: async (req: express.Request, res: express.Response) => {
-    try {
-      const systemDbUri = ConstantsBase.urlSystemDb;
-      const systemDb = await mongoose.createConnection(
-        systemDbUri,
-        {
-          useMongoClient: true,
-          promiseLibrary: require("bluebird")
-        }
-      );
-      return systemDb.model('UserHistory', UserHistorySchema);
-    }
-    catch (err) {
-      err['data'] = 'Error in connecting server and create collection model!';
-      return response.fail_serverError(res, err);
-    }
-  },
 
 };
 module.exports = UsersController;

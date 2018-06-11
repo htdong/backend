@@ -32,7 +32,9 @@ var SessionController = {
     try {
       console.log('[Session-01] Initialization');
 
-      const sessionDbUri = ConstantsBase.urlSessionDb;
+      // const sessionDbUri = ConstantsBase.urlSessionDb;
+      const sessionDbUri = process.env.MONGO_SESSION_URI;
+
       const modelName = req.body.token;
 
       let sessionDb = await mongoose.createConnection(sessionDbUri, { useMongoClient: true, promiseLibrary: require("bluebird") });
@@ -93,7 +95,8 @@ var SessionController = {
     try {
       console.log('[Session-01] Retrieval');
 
-      var sessionDbUri = ConstantsBase.urlSessionDb;
+      // var sessionDbUri = ConstantsBase.urlSessionDb;
+      const sessionDbUri = process.env.MONGO_SESSION_URI;
       const modelName = req.headers.token;
 
       var sessionDb = await mongoose.createConnection(sessionDbUri, { useMongoClient: true, promiseLibrary: require("bluebird") });
@@ -123,7 +126,8 @@ var SessionController = {
   update: async(req: express.Request, res: express.Response) => {
     try {
       console.log('[Session-01] Retrieval for update');
-      const sessionDbUri = ConstantsBase.urlSessionDb;
+      // const sessionDbUri = ConstantsBase.urlSessionDb;
+      const sessionDbUri = process.env.MONGO_SESSION_URI;
       const modelName = req.headers.token;
       let sessionDb = await mongoose.createConnection(sessionDbUri, { useMongoClient: true, promiseLibrary: require("bluebird") });
       let Session = sessionDb.model(modelName, SessionSchema);

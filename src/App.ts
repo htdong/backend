@@ -1,5 +1,9 @@
-import * as express from 'express'
+import * as express from 'express';
 
-var middlewaresBase = require('./config/base/middlewares.base')
+const chalk = require('chalk');
+console.log('%s 2. App Initialized!', chalk.green('✓'));
+
+/* MIDDLEWARES Initialization */
+const middlewaresBase = require('./middlewares.base')
 
 module.exports = express().use(middlewaresBase.configuration())

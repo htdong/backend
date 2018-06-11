@@ -294,7 +294,13 @@ var NotificationsController = {
         data: notifications.docs,
         total: notifications.total,
       }
-      return response.ok_pagination(res, result);
+
+      helperService.log(result);
+
+      setTimeout(()=>{
+        return response.ok_pagination(res, result);
+      }, 3000);
+
     }
     catch (err) {
       return response.fail_serverError(res, err);

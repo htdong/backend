@@ -1,5 +1,3 @@
-console.log('...Pre-loading [Constants]');
-
 /**
 * @module ConstantBase
 * @description Singleton provide shared information on:

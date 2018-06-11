@@ -1,29 +1,47 @@
-var http = require('http');
-var debug = require('debug');
-var fpApp = require('./app');
+import * as http from 'http';
 
-debug('ts-express:server');
+// const debug = require('debug');
+// debug('ts-express:server');
 
-// Get port from environment and sote in Express
-var port = normalizePort(process.env.PORT || 4000);
+/* ENVIRONMENT */
+const dotenv = require('dotenv');
+dotenv.load({ path: '.env.example' });
 
-// Create HTTP server
+const chalk = require('chalk');
+console.log('%s 1. Server Initialized!', chalk.green('✓'));
+
+/* APP Initialization */
+const fpApp = require('./app');
+
+/**
+ * A. NODEJS SERVER SET UP
+ * 1. Get port from environment
+ * 2. Create custom HTTP server
+ * 3. Listen on provided port, on all network interface
+ */
+
+/* A.1 */
+const port = normalizePort(process.env.PORT || 4200);
 fpApp.set('port', port);
-var server = http.createServer(fpApp);
 
-// Listen on provided port, on all network interface
+/* A.2 */
+const server = http.createServer(fpApp);
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
-// SUPPORTING FUNCTIONS
+/**
+ * B. SUPPORTING FUNCTIONS
+ *
+ * @function normalizePort
+ * @function onError
+ * @function onListening
+ */
 
 /**
- * @function normalizePort
  * Normalize a port into a number, string or false
  *
  * @param {number | string} val
- *
  * @return {number|string|boolean}
  */
 function normalizePort(val: number|string): number|string|boolean {
@@ -40,7 +58,6 @@ function normalizePort(val: number|string): number|string|boolean {
 }
 
 /**
-* @function onError
 * Event listener for HTTP Server "error" event
 *
 * @param error
@@ -68,7 +85,6 @@ function onError(error: NodeJS.ErrnoException): void {
 }
 
 /**
-* @function onListening
 * Event listener for HTTP server "listening" event
 */
 function onListening(): void {
@@ -76,6 +92,6 @@ function onListening(): void {
   let bind = (typeof addr === 'string')
     ? `pipe ${addr}`
     : `port ${addr.port}`;
-  console.log(`...Server Listening on ${bind}`);
-  debug(`Listening on ${bind}`);
+  console.log('%s Server Listening on %s', chalk.green('✓'), bind);
+  // debug(`Listening on ${bind}`);
 }

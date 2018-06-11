@@ -42,7 +42,9 @@ var filesService = {
         destination: function (req, file, cb) {
           const clientId = req['mySession'].clientId;
           // console.log(clientId);
-          const myPath = path.join(ConstantsBase.serverRepo, '/', clientId, '/upload');
+
+          // const myPath = path.join(ConstantsBase.serverRepo, '/', clientId, '/upload');
+          const myPath = path.join(process.env.REPOSITORY, '/', clientId, '/upload');
           // console.log(path);
           cb(null, myPath);
         },
@@ -106,8 +108,8 @@ var filesService = {
           var clientId = req['mySession'].clientId;
           var docId = req.params._id;
           // const myPath = rootPath + '/' + clientId + '/requests/' + docId;
-          const myPath = path.join(ConstantsBase.serverRepo, clientId, 'requests', docId);
-
+          // const myPath = path.join(ConstantsBase.serverRepo, clientId, 'requests', docId);
+          const myPath = path.join(process.env.REPOSITORY, clientId, 'requests', docId);
           // If directory path does not exist, create a new one -
           // Must be sure /Users/donghoang/node/gk/repo/' + clientId + '/requests/ already exist
           if (!fs.existsSync(myPath)) {
@@ -268,10 +270,12 @@ var filesService = {
   downloadRequestDocument: async(req, res, requestFile) => {
     try {
       // const sourceFile = rootPath +  + '/requests/' + requestFile.docId + '/' + requestFile.uploadedname;
-      const sourceFile = path.join(ConstantsBase.serverRepo, req['mySession'].clientId, 'requests', requestFile.docId, requestFile.uploadedname);
+      // const sourceFile = path.join(ConstantsBase.serverRepo, req['mySession'].clientId, 'requests', requestFile.docId, requestFile.uploadedname);
+      const sourceFile = path.join(process.env.REPOSITORY, req['mySession'].clientId, 'requests', requestFile.docId, requestFile.uploadedname);
       console.log('Source file exist?', fs.existsSync(sourceFile));
 
-      const destDir = path.join(ConstantsBase.serverRepo, 'download');
+      // const destDir = path.join(ConstantsBase.serverRepo, 'download');
+      const destDir = path.join(process.env.REPOSITORY, 'download');
       // const destDir = '../repo/download/';
       console.log('Destination dir exist?', fs.existsSync(destDir));
 

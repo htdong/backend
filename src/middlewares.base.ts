@@ -1,31 +1,37 @@
-console.log('...Loading [Middlewares]');
+const chalk = require('chalk');
+console.log('%s 3. Middlewares Initialized!', chalk.green('✓'));
 
 // EXTERNAL
 import * as express from 'express';
+import * as expressJwt from 'express-jwt';
+import * as expressValidator from 'express-validator';
 import * as helmet from 'helmet';
 import * as cors from 'cors';
-import * as expressJwt from 'express-jwt';
+
 import * as bodyParser from 'body-parser';
 import * as logger from 'morgan';
 
-var compression = require('compression')
+const compression = require('compression');
 
 // INTERNAL
-var ConstantsBase = require('./constants.base');
-var routesBase = require('./routes.base');
+const ConstantsBase = require('./constants.base');
+const routesBase = require('./routes.base');
 
 /**
-* @module configuration
 * @description Define configuration for server set up
 */
 
-var configuration = () => {
+const configuration = () => {
   const app = express();
-  const serveStatic = require("serve-static");
-  const sessionController = require('../../modules/session/session.controller');
 
-  // Plug into express with 3rd parties Middlewares
+  const serveStatic = require("serve-static");
+
+  const sessionController = require('./modules/session/session.controller');
+
+  // PLUG-IN:  Express use 3rd parties Middlewares
+
   app.use(helmet());
+
   app.use(compression());
 
   app.use(cors({ credentials: true }));
@@ -38,20 +44,23 @@ var configuration = () => {
   // });
 
   app.use(logger('dev'));
+
   app.use(bodyParser.json());
+
   app.use(bodyParser.urlencoded({ extended: false }));
 
-  // Plug into express with custom Middlewares
+  app.use(expressValidator());
 
+  // PULUG-IN: Express use custom Middlewares
+
+  // EXPRESS-JWT VALIDATION
   // POSTMAN Test: Remember to temporarily block below for POSTMAN test
   var myFilter = (req) => {
     const unlessArray = [
       '/',
       '/users/authenticate',
       '/users/register',
-      '/users/forgot',
-      '/graphql',
-      'graphiql',
+      '/users/forgot'
     ];
     //console.log(unlessArray.indexOf(req.path));
 
@@ -61,48 +70,53 @@ var configuration = () => {
     if ((unlessArray.indexOf(req.path)!=-1)||(urls[1]=='repo')) {
       return true;
     }
+
     return false;
   }
 
-  app.use(expressJwt({ secret: ConstantsBase.secret }).unless(myFilter));
+  app.use(expressJwt({ secret: process.env.JWT_SECRET }).unless(myFilter));
 
   app.use((req, res, next) => {
-
-
     let urls = req.path.split("/");
+
     console.log(`
 ----------------------------------------------------------------
-NEW REQUEST INFO:
+REQUEST INFO SUMMARY:
 ----------------------------------------------------------------
 [1] URLs:         ${req.path}
 [2] METHOD:       ${req.method}
-[3] OPTIONS:      ${req.body.option}
-[4] URLs PARTS:   ${JSON.stringify(urls)}
-[5] TOKEN:
+[3] URLs PARTS:   ${JSON.stringify(urls)}
+[4] TOKEN:
   - In headers:   ${req.headers.token}
   - In body:      ${req.body.token}
-[6] ARRAY WEB TOKEN (AWT[0]=wklge; AWT[1]=wkyear) ${req.headers.awt}
-[7] UserId:       ${req.headers.usr}
+[5] ARRAY WEB TOKEN (AWT[0]=wklge; AWT[1]=wkyear) ${req.headers.awt}
+[6] UserId:       ${req.headers.usr}
+[7] OPTIONS:      ${req.body.option}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 PROGRESS INFO:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     `);
 
-    /**
-    * RETRIEVE SESSION INFORMATION BEFORE PROCESSING REQUEST
-    *
-    * Notes on session
-    * [1] DB:                        gkSession
-    * [2] Collection:                token (~ client [mongodb] id)
-    * [3] Session                    userid (store in req.headers.usr)
-    *
-    * Session store following information:
-    * - User's right population after authentication
-    * - Cache of user info and other session data
-    * - TTL or Expiry concept
-    * - Separate of concerns (session vs user) for easy maintenance
-    */
+    next();
+  });
 
+
+  /**
+   * CUSTOM SESSION MANAGEMENT
+   * Retrieve session before processing request
+   *
+   * Notes on session
+   * [1] DB:                        gkSession
+   * [2] Collection:                token (~ client [mongodb] id)
+   * [3] Session                    userid (store in req.headers.usr)
+   *
+   * Session store following information:
+   * - User's right population after authentication
+   * - Cache of user info and other session data
+   * - TTL or Expiry concept
+   * - Separate of concerns (session vs user) for easy maintenance
+   */
+  app.use((req, res, next) => {
     if (req.headers.usr && req.headers.awt) {
       sessionController.get(req, res)
         .then((mySession)=>{

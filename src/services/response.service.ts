@@ -11,6 +11,22 @@
 
 const helper = require('./helper.service');
 
+module.exports.done = (req, res) => {
+	const code = req['myResult']['code'] || 500;
+	const total = req['myResult']['total'] || null;
+
+	const result = {};
+	if (req['myResult']['message']) { result['message'] = req['myResult']['message']; }
+	if (req['myResult']['data']) { result['data'] = req['myResult']['data']; }
+
+	if (req['myResult']['total']) {
+		result['total'] = req['myResult']['total'];
+		res.status(code).send(result);
+	} else {
+		res.status(code).send(result);
+	}
+}
+
 /**
 * OK
 * @function ok							200 - Status, Data | (GET)
